@@ -4,31 +4,33 @@
 	<title>Busto's Site</title>
 	<style>
 	ul {
-	list-style-type: none;
-	margin: 0;
-	padding: 0;
-	overflow: hidden;
-	background-color: #333;
+	  list-style-type: none;
+	  margin: 0;
+	  padding: 0;
+	  overflow: hidden;
+	  border: 1px solid #e7e7e7;
+	  background-color: #f3f3f3;
 	}
 
 	li {
-	float: center;
+	  float: left;
 	}
 
 	li a {
-	display: block;
-	color: white;
-	text-align: center;
-	padding: 14px 16px;
-	text-decoration: none;
+	  display: block;
+	  color: #666;
+	  text-align: center;
+	  padding: 14px 16px;
+	  text-decoration: none;
 	}
 
 	li a:hover:not(.active) {
-	background-color: #111;
+	  background-color: #ddd;
 	}
 
-	.active {
-	background-color: rgb(200,200,255);
+	li a.active {
+	  color: white;
+	  background-color: #4CAF50;
 	}
 	</style>
 </head>
@@ -36,7 +38,7 @@
 <center>
 	<nav style="display:inline;">
 		<ul>
-			<li><a href="index.html">Home</a></li>
+			<li><a class="active" href="index.html">Home</a></li>
 			<li><a href="other_page.html">Other Page</a></li>
 		</ul>
 	</nav>

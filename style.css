@@ -88,14 +88,13 @@ body {
 .folderimg:hover .img-top{
 	display: inline;
 }
-ul {
-  white-space: nowrap;
-}
-
-ul, li {
-  list-style: none;
-  display: inline;
-}
 p {
 	text-align: center;
+}
+.row {
+	display: flex;
+}
+.column {
+  flex: 33.33%;
+  padding: 5px;
 }

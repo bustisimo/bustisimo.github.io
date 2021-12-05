@@ -13,3 +13,28 @@ body {
 	padding: 0;
 	margin: 0;
 }
+.main-container {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+.folderimg {
+	position: relative;
+	display: inline-block;
+}
+.folderimg .img-top {
+	display: none;
+	position: relative;
+	top: 0;
+	left: 0;
+	z-index: 99;
+}
+.folderimg:hover .img-bot{
+	display: none;
+}
+.folderimg:hover .img-top{
+	display: inline;
+}

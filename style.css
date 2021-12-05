@@ -69,6 +69,12 @@ body {
 		border-right-color: transparent;
 	}
 }
-img {
-	border-radius: 90%;
+.folderimg {
+	width: 35px;
+	height: 30px;
+	background: url('folder_c.png') no-repeat;
+	display: inline-block;
+}
+.folderimg:hover {
+	background: url('folder.png') no-repeat;
 }

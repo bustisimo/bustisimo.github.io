@@ -42,10 +42,11 @@ body {
 	position: relative;
 	width: 18em;
 	border-right: 2px solid rgba(255, 255, 255, 0.75);
-	font-size: 40px;
+	color: white;
+	font-size: 30px;
 	font-weight: bold;
 	white-space: nowrap;
-	text-shadow: 2px 2px #ffffffba;
+	text-shadow: 2px 2px #000000;
 	
 	animation: typewriter 4s steps(44) 4s 1 normal both,
 				blinkTextCursor 400ms steps(44) infinite normal;

@@ -37,7 +37,7 @@ body {
 	align-items: center;
 }
 
-.typewriter-text {
+/*.typewriter-text {
 	overflow:hidden;
 	position: relative;
 	width: 18em;
@@ -51,7 +51,6 @@ body {
 	animation: typewriter 4s steps(44) 4s 1 normal both,
 				blinkTextCursor 400ms steps(44) infinite normal;
 }
-<!-- gergwgweg -->
 
 @keyframes typewriter {
 	from {
@@ -71,6 +70,32 @@ body {
 	to {
 		border-right-color: transparent;
 	}
+}
+*/
+.typewriter-text {
+	overflow:hidden;
+	border-right: 2px solid white;
+	white-space: nowrap;
+	margin: 0 auto;
+	color: white;
+	font-size: 30px;
+	font-weight: bold;
+	white-space: nowrap;
+	text-shadow: 2px 2px #000000;
+	
+	animation: 
+        typewriter 3.5s steps(40, end),
+        blinkTextCursor .75s step-end infinite;
+}
+
+@keyframes typewriter {
+  from { width: 0 }
+  to { width: 100% }
+}
+
+@keyframes blinkTextCursor {
+	from, to { border-color: transparent }
+  50% { border-color: white; }
 }
 .folderimg {
 	position: relative;

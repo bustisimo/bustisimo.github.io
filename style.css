@@ -45,7 +45,7 @@ body {
 	font-size: 35px;
 	white-space: nowrap;
 	
-	animation: typewriter 5s steps(44) 1s 1 normal both,
+	animation: typewriter 4s steps(44) 3s 1 normal both,
 				blinkTextCursor 400ms steps(44) infinite normal;
 }
 <!-- gergwgweg -->

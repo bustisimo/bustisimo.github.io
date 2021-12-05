@@ -69,7 +69,7 @@ body {
 		border-right-color: transparent;
 	}
 }
-.folderimg {
+.folderimg .img-bot{
 	width: 35px;
 	height: 30px;
 	position: relative;
@@ -81,6 +81,9 @@ body {
 	top: 0;
 	left: 0;
 	z-index: 99;
+}
+.folderimg:hover .img-bot{
+	display: none;
 }
 .folderimg:hover .img-top{
 	display: inline;

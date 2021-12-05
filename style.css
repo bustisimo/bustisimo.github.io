@@ -84,7 +84,7 @@ body {
 	text-shadow: 2px 2px #000000;
 	
 	animation: 
-        typewriter 3.5s steps(40, end),
+        typewriter 4s steps(40) 2s,
         blinkTextCursor .75s step-end infinite;
 }
 

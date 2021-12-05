@@ -97,3 +97,6 @@ body {
   flex: 33.33%;
   padding: 5px;
 }
+p {
+	text-align: center;
+}

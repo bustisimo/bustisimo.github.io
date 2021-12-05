@@ -72,9 +72,16 @@ body {
 .folderimg {
 	width: 35px;
 	height: 30px;
-	background: url('folder_c.png') no-repeat;
+	position: relative;
 	display: inline-block;
 }
-.folderimg:hover {
-	background: url('folder.png') no-repeat;
+.folderimg .img-top {
+	display: none;
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 99;
+}
+.folderimg:hover .img-top{
+	display: inline;
 }

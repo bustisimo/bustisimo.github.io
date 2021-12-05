@@ -69,3 +69,6 @@ body {
 		border-right-color: transparent;
 	}
 }
+img {
+	border-radius: 90%;
+}

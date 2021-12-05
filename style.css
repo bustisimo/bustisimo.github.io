@@ -42,10 +42,12 @@ body {
 	position: relative;
 	width: 18em;
 	border-right: 2px solid rgba(255, 255, 255, 0.75);
-	font-size: 35px;
+	font-size: 40px;
+	font-weight: bold;
 	white-space: nowrap;
+	text-shadow: 2px 2px #ffffffba;
 	
-	animation: typewriter 4s steps(44) 3s infinite normal both,
+	animation: typewriter 4s steps(44) 4s 1 normal both,
 				blinkTextCursor 400ms steps(44) infinite normal;
 }
 <!-- gergwgweg -->

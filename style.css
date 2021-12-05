@@ -84,15 +84,26 @@ body {
 	text-shadow: 2px 2px #000000;
 	
 	animation: 
-        typewriter 4s steps(40) 2s,
-        blinkTextCursor .75s step-end infinite;
+        typewriter 3s steps(40, end),
+        blinkTextCursor 450ms step-end infinite,
+        typeopacity 2s steps(40, end) infinite,
+        typeopacityb 2s steps(40, end) infinite;
 }
 
 @keyframes typewriter {
   from { width: 0 }
-  to { width: 100% }
+  to { width: 18em }
 }
-
+@keyframes typeopacity {
+	0% {color: white}
+	50% {color: #ffffffa6}
+	100% {color: white}
+}
+@keyframes typeopacityb {
+	0% {text-shadow:2px 2px black}
+	50% {text-shadow:2px 2px #00000080}
+	100% {text-shadow:2px 2px black}
+}
 @keyframes blinkTextCursor {
 	from, to { border-color: transparent }
   50% { border-color: white; }

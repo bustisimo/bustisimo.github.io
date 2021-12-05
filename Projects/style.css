@@ -39,9 +39,11 @@ body {
 	display: inline;
 }
 .row {
-	display: flex;
+  display: inline-grid;
+  grid-template-columns: auto auto auto;
+  padding: 10px;
 }
 .column {
-  flex: 33.33%;
-  padding: 60px;
+  padding: 120px;
+  text-align: center;
 }

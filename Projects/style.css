@@ -38,3 +38,10 @@ body {
 .folderimg:hover .img-top{
 	display: inline;
 }
+.row {
+	display: flex;
+}
+.column {
+  flex: 33.33%;
+  padding: 60px;
+}

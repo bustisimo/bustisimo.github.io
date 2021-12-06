@@ -51,6 +51,7 @@ div.item {
     vertical-align: top;
     display: inline-block;
     text-align: center;
+	width: 80px;
 }
 .caption {
     display: block;

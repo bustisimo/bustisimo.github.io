@@ -10,15 +10,15 @@ body {
     justify-content: center;
     height: 100vh;
     font-family: Arial, sans-serif;
-    background-color: #000; /* Starts with black */
+    background-color: #000;
     animation: backgroundFade 1s ease forwards;
 }
 
 .container {
     text-align: center;
     max-width: 400px;
-    opacity: 0; /* Starts hidden */
-    animation: fadeIn 1.5s ease forwards 1s; /* Delay to sync with background fade */
+    opacity: 0;
+    animation: fadeIn 1.5s ease forwards 1s;
 }
 
 h1 {
@@ -45,6 +45,26 @@ p {
 }
 
 .links a:hover {
+    background-color: #555;
+}
+
+/* Hidden button styling */
+.hidden-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    font-size: 1em;
+    color: #fff;
+    background-color: #333;
+    border-radius: 5px;
+    text-decoration: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.hidden-button:hover {
+    opacity: 1; /* Make button fully visible on hover */
     background-color: #555;
 }
 

@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"name": "bustisimo.github.io",
+			"path": "."
+		}
+	],
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "bustisimo.github.io"
+	}
+}

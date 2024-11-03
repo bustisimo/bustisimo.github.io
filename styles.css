@@ -15,10 +15,17 @@ body {
 }
 
 .container {
+    
     text-align: center;
     max-width: 400px;
     opacity: 0;
     animation: fadeIn 1.5s ease forwards 1s;
+
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    -ms-transform: translateY(-50%);
+    transform: translateY(-50%);
 }
 
 h1 {
@@ -34,7 +41,7 @@ p {
 
 .links a {
     display: inline-block;
-    margin: 0 10px;
+    margin: 0 0px;
     padding: 0.5em 1.5em;
     font-size: 1em;
     text-decoration: none;
@@ -50,6 +57,7 @@ p {
 
 /* Hidden button styling */
 .hidden-button {
+    font-family: Arial, sans-serif;
     position: fixed;
     bottom: 20px;
     right: 20px;
@@ -60,12 +68,43 @@ p {
     border-radius: 5px;
     text-decoration: none;
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.5s ease;
 }
 
 .hidden-button:hover {
-    opacity: 1; /* Make button fully visible on hover */
+    opacity: 1;
     background-color: #555;
+}
+
+/* Canvas and score display styling */
+#snakeGame {
+    display: none; /* Hidden initially */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+#scoreDisplay {
+    display: none;
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    color: #fff;
+    font-size: 1.5em;
+}
+
+/* High Score display styling */
+#highScoreDisplay {
+    position: fixed;
+    top: 40px; /* Adjusted to be below the score display */
+    right: 10px;
+    font-size: 1.5em;
+    color: #fff;
+    z-index: 10; /* Ensure it appears above other elements */
+    display: none; /* Initially hidden */
 }
 
 /* Fade-in animations */
@@ -77,4 +116,69 @@ p {
 @keyframes backgroundFade {
     from { background-color: #000; }
     to { background-color: #f4f4f4; }
+}
+
+/* Play Again button styling */
+#playAgainButton {
+    display: none; /* Hidden initially */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 10px 20px;
+    font-size: 1em;
+    color: #fff;
+    background-color: #333;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#playAgainButton:hover {
+    background-color: #555;
+}
+
+/* Close Game button styling */
+#closeGameButton {
+    display: none; /* Hidden initially */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 10px 20px;
+    font-size: 1em;
+    color: #fff;
+    background-color: #333;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#closeGameButton:hover {
+    background-color: #555;
+}
+
+/* Button styling */
+#buttonContainer {
+    margin: 0;
+    position: absolute;
+    top: 45%;
+    left: 49.5%;
+}
+
+#buttonContainer button {
+    text-align: center;
+    margin: 10px 10px; /* Space between buttons */
+    padding: 10px 20px; /* Button padding */
+    font-size: 1em; /* Button text size */
+    cursor: pointer; /* Change cursor on hover */
+    border: none; /* Remove default border */
+    border-radius: 5px; /* Rounded corners */
+    background-color: #4CAF50; /* Green background for buttons */
+    color: white; /* White text color */
+}
+
+/* Hover effect */
+#buttonContainer button:hover {
+    background-color: #45a049; /* Darker green on hover */
 }

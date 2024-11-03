@@ -16,6 +16,18 @@
     </div>
 
     <!-- Hidden button in the bottom-right corner -->
-    <a href="hidden-page.html" class="hidden-button">Secret Link</a>
+    <button class="hidden-button" onclick="startGame()">Secret Game</button>
+
+    <div id="gameOverlay" style="display:none;">
+        <canvas id="snakeGame"></canvas>
+        <div id="scoreDisplay">Score: 0</div>
+        <div id="highScoreDisplay">High Score: 0</div>
+        <div id="buttonContainer">
+            <button id="playAgainButton" style="display:none;" onclick="startGame()">Play Again</button>
+            <button id="closeGameButton" onclick="closeGame()">Close Game</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>

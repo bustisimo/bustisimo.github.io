@@ -266,3 +266,74 @@ section h2 {
 }
 
 
+
+/* Left sidebar navigation and responsive hamburger */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 200px;
+  height: 100vh;
+  background-color: #333;
+  transform: translateX(0);
+  transition: transform 0.3s ease;
+  z-index: 1000;
+  display: flex;
+}
+nav ul {
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 20px;
+  margin: 0;
+}
+nav li {
+  margin: 1em 0;
+}
+nav a {
+  color: #fff;
+  display: block;
+  font-weight: bold;
+  text-decoration: none;
+}
+nav a:hover {
+  background-color: #555;
+  border-radius: 4px;
+}
+.content {
+  margin-left: 200px;
+  padding: 2em;
+}
+#hamburger {
+  display: none;
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  font-size: 28px;
+  background: none;
+  border: none;
+  color: #333;
+  cursor: pointer;
+  z-index: 1001;
+}
+@media (max-width: 768px) {
+  nav {
+    transform: translateX(-100%);
+  }
+  nav.active {
+    transform: translateX(0);
+  }
+  #hamburger {
+    display: block;
+  }
+  .content {
+    margin-left: 0;
+    padding: 2em 1em;
+  }
+  nav ul {
+    padding: 60px 20px;
+  }
+}
+body {
+  padding-top: 0;
+}
+

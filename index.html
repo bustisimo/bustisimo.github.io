@@ -23,22 +23,25 @@
       </ul>
     </nav>
 
-  <!-- Hero Section -->
-<section id="home" class="hero">
-  <div class="container fade-in">
-    <h1>Justis DiBattista</h1>
-    <p>Computer Engineer &amp; Operations Technician</p>
-    <div class="links">
-      <a href="https://linkedin.com/in/justisdibattista" target="LinkedIn Page">LinkedIn</a>
-    </div>
-    <<<div id="click-counter">
-  <button id="globalClickBtn">Click Me!</button>
-  <span id="globalCount">0</span> clicks so far
-</div>an> clicks so far
-</div> </div0
-  </div>
-</section>
-- About Section -->
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+      <div class="container fade-in">
+        <h1>Justis DiBattista</h1>
+        <p>Computer Engineer &amp; Operations Technician</p>
+        <div class="links">
+          <a href="https://linkedin.com/in/justisdibattista" target="LinkedIn Page">LinkedIn</a>
+        </div>
+        <!-- Global click counter: displays the total number of times visitors
+             have clicked the button across all sessions. Uses CountAPI
+             (see script.js) to persist the count. -->
+        <div id="click-counter">
+          <button id="globalClickBtn">Click Me!</button>
+          <span id="globalCount">0</span> clicks so far
+        </div>
+      </div>
+    </section>
+
+    <!-- About Section -->
     <section id="about" class="about">
       <h2>About Me</h2>
       <p>
@@ -87,11 +90,7 @@
         LinkedIn or send me an email.
       </p>
       <div class="contact-links">
-        <a
-          href="https://linkedin.com/in/justisdibattista"
-          target="_blank"
-          >LinkedIn</a
-        >
+        <a href="https://linkedin.com/in/justisdibattista" target="_blank">LinkedIn</a>
         <a href="mailto:justisdibattista@example.com">Email</a>
       </div>
     </section>
@@ -102,13 +101,7 @@
       <div id="scoreDisplay">Score: 0</div>
       <div id="highScoreDisplay">High Score: 0</div>
       <div id="buttonContainer">
-        <button
-          id="playAgainButton"
-          style="display: none"
-          onclick="startGame()"
-        >
-          Play Again
-        </button>
+        <button id="playAgainButton" style="display: none" onclick="startGame()">Play Again</button>
         <button id="closeGameButton" onclick="closeGame()">Close Game</button>
       </div>
     </div>

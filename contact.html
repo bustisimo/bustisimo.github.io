@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact - Justis DiBattista</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    html { scroll-behavior: smooth; }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav>
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="projects.html">Projects</a></li>
+      <li><a href="#" onclick="startGame(); return false;">Play Snake</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+  </nav>
+
+  <!-- Contact Section -->
+  <section id="contact" class="contact">
+    <h2>Get in Touch</h2>
+    <p>Interested in collaborating or just want to say hi? Connect with me on LinkedIn or send me an email.</p>
+    <div class="contact-links">
+      <a href="https://linkedin.com/in/justisdibattista" target="_blank">LinkedIn</a>
+      <a href="mailto:justisdibattista@example.com">Email</a>
+    </div>
+  </section>
+
+  <!-- Game overlay and canvas remains hidden until triggered -->
+  <div id="gameOverlay" style="display: none;">
+    <canvas id="snakeGame"></canvas>
+    <div id="scoreDisplay">Score: 0</div>
+    <div id="highScoreDisplay">High Score: 0</div>
+    <div id="buttonContainer">
+      <button id="playAgainButton" style="display: none" onclick="startGame()">Play Again</button>
+      <button id="closeGameButton" onclick="closeGame()">Close Game</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

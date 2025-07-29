@@ -266,3 +266,87 @@ section h2 {
 }
 
 
+
+/* Desktop sidebar navigation and content area */
+@media (min-width: 769px) {
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 200px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #333;
+    padding-top: 20px;
+    z-index: 1000;
+  }
+  nav ul {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-left: 0;
+  }
+  nav li {
+    margin: 0.5em 1em;
+  }
+  nav a {
+    display: block;
+  }
+  .content {
+    margin-left: 200px;
+    padding: 0 1em;
+  }
+  #hamburger {
+    display: none;
+  }
+}
+
+/* Mobile hamburger menu */
+#hamburger {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.5em;
+  cursor: pointer;
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  z-index: 1100;
+  color: #333;
+}
+
+@media (max-width: 768px) {
+  #hamburger {
+    display: block;
+  }
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 200px;
+    height: 100vh;
+    background-color: #333;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    padding-top: 20px;
+    z-index: 1000;
+  }
+  nav.active {
+    transform: translateX(0);
+  }
+  nav ul {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  nav li {
+    margin: 0.5em 1em;
+  }
+  nav a {
+    display: block;
+  }
+  .content {
+    margin-left: 0;
+    padding-top: 60px;
+  }
+}
+

@@ -26,8 +26,28 @@
       <h1 class="fade-item delay-0">Justis DiBattista</h1>
       <p class="fade-item delay-1">Triage Operations & Computer Engineer</p>
       <div id="click-counter" class="fade-item delay-2">
-        <button id="globalClickBtn">Click Me!</button>
-        <span id="globalCount">0</span> clicks so far
+        <button id="click-btn">Click Me!</button>
+        <p>Total Clicks: <span id="click-count">Loading...</span></p>
+        <script>
+          const counterUrl = 'https://api.counterapi.dev/api/v1/counter/justisdibattista/clicks';
+
+          async function updateCount() {
+            const res = await fetch('${counterUrl}/get');
+            const data = await res.json();
+            document.getElementById('click-count').innerText = data.count;
+          }
+
+          async function incrementCount() {
+            const res = await fetch '${counterUrl}/hit');
+            const data = await res.json();
+            document.getElementById('click-count').innerText = data.count;
+          }
+
+          document.getElementById('click-btn').addEventListener('click', incrementCount);
+
+          // Load the count on page load
+          updateCount();
+        </script>
       </div>
     </div>
   </section>

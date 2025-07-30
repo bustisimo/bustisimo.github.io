@@ -173,9 +173,10 @@ document.addEventListener("DOMContentLoaded", () => {
   if (counterDiv && countDisplay && clickBtn) {
     const namespace = "justisdibattista";
     const key = "site_clicks";
+    const counterApi = "https://api.counterapi.dev";
     // Fetch and update current count
     function updateCount() {
-      fetch(`https://api.countapi.xyz/get/${namespace}/${key}`)
+      fetch(`${counterApi}/get/${namespace}/${key}`)
         .then((res) => res.json())
         .then((data) => {
           countDisplay.textContent = data.value;
@@ -186,7 +187,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     // Increment count when user clicks the button
     clickBtn.addEventListener("click", () => {
-      fetch(`https://api.countapi.xyz/hit/${namespace}/${key}`)
+      fetch(`${counterApi}/hit/${namespace}/${key}`)
         .then((res) => res.json())
         .then((data) => {
           countDisplay.textContent = data.value;

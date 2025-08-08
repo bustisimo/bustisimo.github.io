@@ -6,6 +6,14 @@ const highScoreDisplay = document.getElementById("highScoreDisplay");
 const playAgainButton = document.getElementById("playAgainButton");
 const closeGameButton = document.getElementById("closeGameButton");
 const nav = document.querySelector("nav");
+const menuToggle = document.getElementById("menu-toggle");
+const navLinks = document.getElementById("nav-links");
+
+if (menuToggle && navLinks) {
+  menuToggle.addEventListener("click", () => {
+    navLinks.classList.toggle("show");
+  });
+}
 
 // Game state variables
 let score = 0;

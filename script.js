@@ -17,14 +17,17 @@ var HapticController = (function () {
 
     hapticCheckbox = document.createElement('input');
     hapticCheckbox.type = 'checkbox';
+    hapticCheckbox.setAttribute('switch', '');
     hapticCheckbox.id = id;
-    hapticCheckbox.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;pointer-events:none;width:0;height:0;';
+    hapticCheckbox.style.all = 'initial';
+    hapticCheckbox.style.appearance = 'auto';
+    hapticCheckbox.style.display = 'none';
 
     hapticLabel = document.createElement('label');
     hapticLabel.setAttribute('for', id);
-    hapticLabel.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;pointer-events:none;width:0;height:0;';
+    hapticLabel.style.display = 'none';
 
-    document.body.appendChild(hapticCheckbox);
+    hapticLabel.appendChild(hapticCheckbox);
     document.body.appendChild(hapticLabel);
   }
 
@@ -89,7 +92,7 @@ var HapticController = (function () {
     return result;
   }
 
-  function runPattern(vibrations, defaultIntensity) {
+  function runPattern(vibrations, defaultIntensity, firstClickFired) {
     return new Promise(function (resolve) {
       ensureDOM();
       if (!hapticLabel) {
@@ -115,7 +118,6 @@ var HapticController = (function () {
 
       var startTime = 0;
       var lastToggleTime = -1;
-      var firstClickFired = false;
 
       function loop(time) {
         if (startTime === 0) startTime = time;
@@ -162,33 +164,9 @@ var HapticController = (function () {
 
   return {
     trigger: function (input, options) {
-      if (navigator.vibrate) {
-        var defaultIntensity = options && options.intensity ? options.intensity : 0.5;
-        var vibrations = [];
-
-        if (typeof input === 'number') {
-          vibrations = [{ duration: input, intensity: defaultIntensity }];
-        } else if (Array.isArray(input)) {
-          if (typeof input[0] === 'number') {
-            // [on, off, on, off, ...] shorthand
-            for (var i = 0; i < input.length; i += 2) {
-              vibrations.push({
-                duration: input[i],
-                delay: i > 0 ? input[i - 1] : 0
-              });
-            }
-          } else {
-            vibrations = input;
-          }
-        } else if (input && typeof input === 'object' && input.pattern) {
-          vibrations = input.pattern;
-        }
-
-        navigator.vibrate(toVibratePattern(vibrations, defaultIntensity));
-      }
-
-      // iOS Safari fallback: PWM clicks via RAF
+      var defaultIntensity = options && options.intensity ? options.intensity : 0.5;
       var vibrations = [];
+
       if (typeof input === 'number') {
         vibrations = [{ duration: input }];
       } else if (Array.isArray(input)) {
@@ -203,8 +181,35 @@ var HapticController = (function () {
         vibrations = input.pattern;
       }
 
-      var defaultIntensity = options && options.intensity ? options.intensity : 0.5;
-      return runPattern(vibrations, defaultIntensity);
+      if (vibrations.length === 0) return;
+
+      // Apply default intensity to vibrations
+      for (var i = 0; i < vibrations.length; i++) {
+        if (vibrations[i].intensity === undefined) {
+          vibrations[i].intensity = defaultIntensity;
+        }
+      }
+
+      // Android: navigator.vibrate
+      if (navigator.vibrate) {
+        navigator.vibrate(toVibratePattern(vibrations, defaultIntensity));
+      }
+
+      // iOS Safari fallback: toggle checkbox for Taptic Engine
+      // CRITICAL: first click must happen synchronously within user gesture
+      if (!navigator.vibrate) {
+        ensureDOM();
+        if (!hapticLabel) return;
+
+        var firstDelay = vibrations[0].delay || 0;
+        var firstClickFired = false;
+        if (firstDelay === 0) {
+          hapticLabel.click();
+          firstClickFired = true;
+        }
+
+        return runPattern(vibrations, defaultIntensity, firstClickFired);
+      }
     },
 
     cancel: function () {
@@ -321,6 +326,12 @@ if (menuToggle && navLinks) {
     });
   }
 }
+
+// ===== Global Haptic on All Buttons & Links =====
+document.addEventListener('click', function (e) {
+  var target = e.target.closest('button, a, .project-link, .contact-links a, .interest-card');
+  if (target) haptic('light');
+}, true);
 
 // ===== Active Page Highlighting =====
 (function highlightActivePage() {

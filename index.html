@@ -60,31 +60,14 @@
   </footer>
 
   <script>
-    const counterUrl = 'https://api.counterapi.dev/api/v1/counter/justisdibattista/clicks';
+    var clickCount = parseInt(localStorage.getItem('clickCount') || '0', 10);
+    document.getElementById('click-count').innerText = clickCount;
 
-    async function updateCount() {
-      try {
-        const res = await fetch(`${counterUrl}/get`);
-        const data = await res.json();
-        document.getElementById('click-count').innerText = data.count;
-      } catch (e) {
-        document.getElementById('click-count').innerText = '---';
-      }
-    }
-
-    async function incrementCount() {
-      if (typeof haptic === 'function') haptic('light');
-      try {
-        const res = await fetch(`${counterUrl}/hit`);
-        const data = await res.json();
-        document.getElementById('click-count').innerText = data.count;
-      } catch (e) {
-        document.getElementById('click-count').innerText = '---';
-      }
-    }
-
-    document.getElementById('click-btn').addEventListener('click', incrementCount);
-    updateCount();
+    document.getElementById('click-btn').addEventListener('click', function () {
+      clickCount++;
+      localStorage.setItem('clickCount', clickCount);
+      document.getElementById('click-count').innerText = clickCount;
+    });
   </script>
   <script src="script.js"></script>
 </body>

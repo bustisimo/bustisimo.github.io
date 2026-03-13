@@ -400,6 +400,9 @@ var food = {};
 var gameInterval;
 var cellSize = 20;
 
+// Queue for haptics that need to fire from a user gesture context (iOS)
+var pendingGameHaptic = null;
+
 function startGame() {
   if (!canvas) return;
 
@@ -455,7 +458,7 @@ function updateGame(gridWidth, gridHeight) {
       x: Math.floor(Math.random() * gridWidth),
       y: Math.floor(Math.random() * gridHeight),
     };
-    haptic('success');
+    pendingGameHaptic = 'success';
   } else {
     snake.pop();
   }
@@ -484,7 +487,7 @@ function drawGame(gridWidth, gridHeight) {
 function endGame() {
   clearInterval(gameInterval);
 
-  haptic('error');
+  pendingGameHaptic = 'error';
 
   if (score > highScore) {
     highScore = score;
@@ -524,10 +527,23 @@ if (canvas) {
     touchStartX = e.touches[0].clientX;
     touchStartY = e.touches[0].clientY;
     e.preventDefault();
+
+    // Fire any queued game haptics within this user gesture
+    if (pendingGameHaptic) {
+      haptic(pendingGameHaptic);
+      pendingGameHaptic = null;
+    }
   }, { passive: false });
 
   canvas.addEventListener('touchmove', function (e) {
     e.preventDefault();
+
+    // Fire any queued game haptics within this user gesture
+    if (pendingGameHaptic) {
+      haptic(pendingGameHaptic);
+      pendingGameHaptic = null;
+    }
+
     var dx = e.touches[0].clientX - touchStartX;
     var dy = e.touches[0].clientY - touchStartY;
     var minSwipe = 20;
@@ -547,6 +563,14 @@ if (canvas) {
 
     haptic('light');
   }, { passive: false });
+
+  canvas.addEventListener('touchend', function () {
+    // Fire any queued game haptics (e.g. game over on collision)
+    if (pendingGameHaptic) {
+      haptic(pendingGameHaptic);
+      pendingGameHaptic = null;
+    }
+  });
 }
 
 function closeGame() {

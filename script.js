@@ -1,36 +1,154 @@
-// Grab DOM elements needed for the game and UI
-const canvas = document.getElementById("snakeGame");
-const context = canvas.getContext("2d");
-const scoreDisplay = document.getElementById("scoreDisplay");
-const highScoreDisplay = document.getElementById("highScoreDisplay");
-const playAgainButton = document.getElementById("playAgainButton");
-const closeGameButton = document.getElementById("closeGameButton");
-const nav = document.querySelector("nav");
-const menuToggle = document.getElementById("menu-toggle");
-const navLinks = document.getElementById("nav-links");
+// ===== Haptic Feedback =====
+function haptic(type) {
+  if (!navigator.vibrate) return;
+  switch (type) {
+    case 'light':   navigator.vibrate(8);  break;
+    case 'medium':  navigator.vibrate(20); break;
+    case 'heavy':   navigator.vibrate(35); break;
+    case 'success': navigator.vibrate([8, 50, 8]); break;
+    case 'error':   navigator.vibrate([40, 30, 40, 30, 40]); break;
+    default:        navigator.vibrate(8);  break;
+  }
+}
+
+// ===== Dark Mode Toggle =====
+(function initTheme() {
+  var saved = localStorage.getItem('theme');
+  if (saved) {
+    document.documentElement.setAttribute('data-theme', saved);
+  } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+})();
+
+function updateThemeColor() {
+  var meta = document.querySelector('meta[name="theme-color"]');
+  if (!meta) {
+    meta = document.createElement('meta');
+    meta.name = 'theme-color';
+    document.head.appendChild(meta);
+  }
+  var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  meta.content = isDark ? '#1a1a2e' : '#f5f5f7';
+}
+
+function updateThemeIcon() {
+  var btn = document.getElementById('theme-toggle');
+  if (!btn) return;
+  var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  btn.textContent = isDark ? '\u2600\uFE0F' : '\uD83C\uDF19';
+  btn.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+}
+
+function toggleTheme() {
+  var current = document.documentElement.getAttribute('data-theme');
+  var next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+  updateThemeIcon();
+  updateThemeColor();
+  haptic('medium');
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  updateThemeIcon();
+  updateThemeColor();
+
+  var themeBtn = document.getElementById('theme-toggle');
+  if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
+});
+
+// ===== Mobile Nav Toggle =====
+var menuToggle = document.getElementById('menu-toggle');
+var navLinks = document.getElementById('nav-links');
 
 if (menuToggle && navLinks) {
-  menuToggle.addEventListener("click", () => {
-    navLinks.classList.toggle("show");
+  menuToggle.addEventListener('click', function () {
+    navLinks.classList.toggle('show');
+    var isOpen = navLinks.classList.contains('show');
+    menuToggle.innerHTML = isOpen ? '&#10005;' : '&#9776;';
+    menuToggle.setAttribute('aria-expanded', String(isOpen));
+    haptic('light');
   });
+
+  // Auto-close nav when a link is tapped
+  var navLinkItems = navLinks.querySelectorAll('a');
+  for (var i = 0; i < navLinkItems.length; i++) {
+    navLinkItems[i].addEventListener('click', function () {
+      if (navLinks.classList.contains('show')) {
+        navLinks.classList.remove('show');
+        menuToggle.innerHTML = '&#9776;';
+        menuToggle.setAttribute('aria-expanded', 'false');
+        haptic('light');
+      }
+    });
+  }
+}
+
+// ===== Active Page Highlighting =====
+(function highlightActivePage() {
+  var currentPage = window.location.pathname.split('/').pop() || 'index.html';
+  var links = document.querySelectorAll('#nav-links a');
+  for (var i = 0; i < links.length; i++) {
+    var href = links[i].getAttribute('href');
+    if (href === currentPage) {
+      links[i].classList.add('active');
+    }
+  }
+})();
+
+// ===== Scroll Reveal =====
+document.addEventListener('DOMContentLoaded', function () {
+  var reveals = document.querySelectorAll('.reveal');
+  if (!reveals.length) return;
+
+  var observer = new IntersectionObserver(function (entries) {
+    for (var i = 0; i < entries.length; i++) {
+      if (entries[i].isIntersecting) {
+        entries[i].target.classList.add('visible');
+        observer.unobserve(entries[i].target);
+      }
+    }
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+  for (var i = 0; i < reveals.length; i++) {
+    observer.observe(reveals[i]);
+  }
+});
+
+// ===== Snake Game =====
+var canvas = document.getElementById('snakeGame');
+var nav = document.querySelector('nav');
+
+// Only initialize game variables if the canvas exists on this page
+if (canvas) {
+  var context = canvas.getContext('2d');
+  var scoreDisplay = document.getElementById('scoreDisplay');
+  var highScoreDisplay = document.getElementById('highScoreDisplay');
+  var playAgainButton = document.getElementById('playAgainButton');
+  var closeGameButton = document.getElementById('closeGameButton');
 }
 
 // Game state variables
-let score = 0;
-// Persist high score using localStorage; fall back to zero
-let highScore = localStorage.getItem("snakeHighScore")
-  ? parseInt(localStorage.getItem("snakeHighScore"), 10)
+var score = 0;
+var highScore = localStorage.getItem('snakeHighScore')
+  ? parseInt(localStorage.getItem('snakeHighScore'), 10)
   : 0;
-let snake = [];
-let direction = { x: 1, y: 0 };
-let food = {};
-let gameInterval;
-const cellSize = 20;
+var snake = [];
+var direction = { x: 1, y: 0 };
+var food = {};
+var gameInterval;
+var cellSize = 20;
 
 // Start or restart the Snake game
 function startGame() {
+  if (!canvas) return;
+
+  // Lock body scroll so page doesn't move behind overlay
+  document.body.style.overflow = 'hidden';
+
   // Hide navigation so game takes full screen
-  if (nav) nav.style.display = "none";
+  if (nav) nav.style.display = 'none';
 
   // Reset score and direction
   score = 0;
@@ -41,12 +159,12 @@ function startGame() {
   canvas.height = window.innerHeight;
 
   // Determine grid dimensions based on cell size
-  const gridWidth = Math.floor(canvas.width / cellSize);
-  const gridHeight = Math.floor(canvas.height / cellSize);
+  var gridWidth = Math.floor(canvas.width / cellSize);
+  var gridHeight = Math.floor(canvas.height / cellSize);
 
   // Initialize snake in the center of the grid
-  const startX = Math.floor(gridWidth / 2);
-  const startY = Math.floor(gridHeight / 2);
+  var startX = Math.floor(gridWidth / 2);
+  var startY = Math.floor(gridHeight / 2);
   snake = [{ x: startX, y: startY }];
 
   // Place initial food at a random position
@@ -55,29 +173,31 @@ function startGame() {
     y: Math.floor(Math.random() * gridHeight),
   };
 
-  // Update on‑screen scores
-  scoreDisplay.textContent = "Score: " + score;
-  highScoreDisplay.textContent = "High Score: " + highScore;
-  highScoreDisplay.style.display = "block";
+  // Update on-screen scores
+  scoreDisplay.textContent = 'Score: ' + score;
+  highScoreDisplay.textContent = 'High Score: ' + highScore;
+  highScoreDisplay.style.display = 'block';
 
   // Show game overlay and canvas
-  document.getElementById("gameOverlay").style.display = "block";
-  canvas.style.display = "block";
-  scoreDisplay.style.display = "block";
+  document.getElementById('gameOverlay').style.display = 'block';
+  canvas.style.display = 'block';
+  scoreDisplay.style.display = 'block';
 
   // Hide control buttons until game ends
-  playAgainButton.style.display = "none";
-  closeGameButton.style.display = "none";
+  playAgainButton.style.display = 'none';
+  closeGameButton.style.display = 'none';
 
   // Start the game loop
   clearInterval(gameInterval);
-  gameInterval = setInterval(() => updateGame(gridWidth, gridHeight), 100);
+  gameInterval = setInterval(function () { updateGame(gridWidth, gridHeight); }, 100);
+
+  haptic('medium');
 }
 
 // Game update loop
 function updateGame(gridWidth, gridHeight) {
   // Move the snake by adding a new head
-  const head = {
+  var head = {
     x: snake[0].x + direction.x,
     y: snake[0].y + direction.y,
   };
@@ -86,19 +206,20 @@ function updateGame(gridWidth, gridHeight) {
   // Check if food is consumed
   if (head.x === food.x && head.y === food.y) {
     score += 10;
-    scoreDisplay.textContent = "Score: " + score;
+    scoreDisplay.textContent = 'Score: ' + score;
     food = {
       x: Math.floor(Math.random() * gridWidth),
       y: Math.floor(Math.random() * gridHeight),
     };
+    haptic('light');
   } else {
     // Remove tail if no food eaten
     snake.pop();
   }
 
   // Detect collisions with walls or self
-  const hitWall = head.x < 0 || head.x >= gridWidth || head.y < 0 || head.y >= gridHeight;
-  const hitSelf = snake.slice(1).some((part) => part.x === head.x && part.y === head.y);
+  var hitWall = head.x < 0 || head.x >= gridWidth || head.y < 0 || head.y >= gridHeight;
+  var hitSelf = snake.slice(1).some(function (part) { return part.x === head.x && part.y === head.y; });
   if (hitWall || hitSelf) {
     endGame();
   }
@@ -113,13 +234,13 @@ function drawGame(gridWidth, gridHeight) {
   context.clearRect(0, 0, canvas.width, canvas.height);
 
   // Draw snake segments
-  context.fillStyle = "#4CAF50";
-  snake.forEach((part) => {
+  context.fillStyle = '#4CAF50';
+  snake.forEach(function (part) {
     context.fillRect(part.x * cellSize, part.y * cellSize, cellSize, cellSize);
   });
 
   // Draw the food
-  context.fillStyle = "#FF5733";
+  context.fillStyle = '#FF5733';
   context.fillRect(food.x * cellSize, food.y * cellSize, cellSize, cellSize);
 }
 
@@ -127,42 +248,80 @@ function drawGame(gridWidth, gridHeight) {
 function endGame() {
   clearInterval(gameInterval);
 
+  haptic('error');
+
   // Update high score if necessary and persist it
   if (score > highScore) {
     highScore = score;
-    localStorage.setItem("snakeHighScore", highScore);
+    localStorage.setItem('snakeHighScore', highScore);
   }
-  highScoreDisplay.textContent = "High Score: " + highScore;
+  highScoreDisplay.textContent = 'High Score: ' + highScore;
 
   // Show control buttons
-  playAgainButton.style.display = "block";
-  closeGameButton.style.display = "block";
+  playAgainButton.style.display = 'block';
+  closeGameButton.style.display = 'block';
 
-  // Reveal the overlay (ensures z‑index layering)
-  document.getElementById("gameOverlay").style.display = "flex";
+  // Reveal the overlay (ensures z-index layering)
+  document.getElementById('gameOverlay').style.display = 'flex';
 }
 
 // Arrow key control handling
-window.addEventListener("keydown", (e) => {
+window.addEventListener('keydown', function (e) {
   switch (e.key) {
-    case "ArrowUp":
+    case 'ArrowUp':
       if (direction.y === 0) direction = { x: 0, y: -1 };
       break;
-    case "ArrowDown":
+    case 'ArrowDown':
       if (direction.y === 0) direction = { x: 0, y: 1 };
       break;
-    case "ArrowLeft":
+    case 'ArrowLeft':
       if (direction.x === 0) direction = { x: -1, y: 0 };
       break;
-    case "ArrowRight":
+    case 'ArrowRight':
       if (direction.x === 0) direction = { x: 1, y: 0 };
       break;
   }
 });
 
+// ===== Snake Touch / Swipe Controls =====
+if (canvas) {
+  var touchStartX = 0;
+  var touchStartY = 0;
+
+  canvas.addEventListener('touchstart', function (e) {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    e.preventDefault();
+  }, { passive: false });
+
+  canvas.addEventListener('touchmove', function (e) {
+    e.preventDefault();
+  }, { passive: false });
+
+  canvas.addEventListener('touchend', function (e) {
+    var dx = e.changedTouches[0].clientX - touchStartX;
+    var dy = e.changedTouches[0].clientY - touchStartY;
+    var minSwipe = 30;
+
+    if (Math.abs(dx) < minSwipe && Math.abs(dy) < minSwipe) return;
+
+    if (Math.abs(dx) > Math.abs(dy)) {
+      // Horizontal swipe
+      if (dx > 0 && direction.x === 0) direction = { x: 1, y: 0 };
+      else if (dx < 0 && direction.x === 0) direction = { x: -1, y: 0 };
+    } else {
+      // Vertical swipe
+      if (dy > 0 && direction.y === 0) direction = { x: 0, y: 1 };
+      else if (dy < 0 && direction.y === 0) direction = { x: 0, y: -1 };
+    }
+    haptic('light');
+  });
+}
+
 // Close the game overlay and show navigation again
 function closeGame() {
-  document.getElementById("gameOverlay").style.display = "none";
-  // Show navigation when exiting the game
-  if (nav) nav.style.display = "block";
+  document.getElementById('gameOverlay').style.display = 'none';
+  document.body.style.overflow = '';
+  if (nav) nav.style.display = '';
+  haptic('light');
 }

@@ -1,33 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>About - Justis DiBattista</title>
-    <link rel="stylesheet" href="styles.css" />
-    <style>
-      html { scroll-behavior: smooth; }
-    </style>
-  </head>
-  <body>
-    <!-- Navigation -->
-    <nav>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About - Justis DiBattista</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <nav>
+    <a href="index.html" class="nav-logo">JD</a>
+    <ul id="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="projects.html">Projects</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+    <div class="nav-right">
+      <button id="theme-toggle" aria-label="Toggle dark mode"></button>
       <button id="menu-toggle" aria-label="Toggle navigation">&#9776;</button>
-      <ul id="nav-links">
-        <li><a href="index.html">Home</a></li>
-        <li><a href="about.html">About</a></li>
-        <li><a href="projects.html">Projects</a></li>
-        <li><a href="contact.html">Contact</a></li>
-      </ul>
-    </nav>
-    <!-- About Section -->
-    <section id="about" class="about">
-      <h2>About Me</h2>
-      <p>
-        I work in tech operations and enjoy exploring new hardware and software
-        projects in my spare time.
-      </p>
-    </section>
-    <script src="script.js"></script>
-  </body>
+    </div>
+  </nav>
+
+  <section id="about" class="about">
+    <h2 class="reveal">About Me</h2>
+    <p class="about-intro reveal">
+      I work in tech operations and enjoy exploring new hardware and software projects in my spare time.
+    </p>
+
+    <div class="interests-grid">
+      <div class="interest-card reveal">
+        <span class="icon">&#9881;&#65039;</span>
+        <h3>Hardware Tinkering</h3>
+        <p>Building and modding PCs, electronics, and embedded systems.</p>
+      </div>
+      <div class="interest-card reveal">
+        <span class="icon">&#128421;&#65039;</span>
+        <h3>Homelab</h3>
+        <p>Self-hosted services, virtualization, and network infrastructure.</p>
+      </div>
+      <div class="interest-card reveal">
+        <span class="icon">&#127918;</span>
+        <h3>Game Dev</h3>
+        <p>Experimenting with game mechanics and interactive experiences.</p>
+      </div>
+      <div class="interest-card reveal">
+        <span class="icon">&#128187;</span>
+        <h3>Open Source</h3>
+        <p>Contributing to and building tools that solve real problems.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-links">
+      <a href="https://github.com/bustisimo" target="_blank">GitHub</a>
+      <a href="https://linkedin.com/in/justisdibattista" target="_blank">LinkedIn</a>
+    </div>
+    <p>&copy; 2026 Justis DiBattista</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
 </html>

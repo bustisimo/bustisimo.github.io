@@ -2,45 +2,48 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Contact - Justis DiBattista</title>
-  <link rel="stylesheet" href="styles.css">
-  <style>
-    html { scroll-behavior: smooth; }
-  </style>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <!-- Navigation -->
   <nav>
-    <button id="menu-toggle" aria-label="Toggle navigation">&#9776;</button>
+    <a href="index.html" class="nav-logo">JD</a>
     <ul id="nav-links">
       <li><a href="index.html">Home</a></li>
       <li><a href="about.html">About</a></li>
       <li><a href="projects.html">Projects</a></li>
       <li><a href="contact.html">Contact</a></li>
     </ul>
+    <div class="nav-right">
+      <button id="theme-toggle" aria-label="Toggle dark mode"></button>
+      <button id="menu-toggle" aria-label="Toggle navigation">&#9776;</button>
+    </div>
   </nav>
 
-  <!-- Contact Section -->
   <section id="contact" class="contact">
-    <h2>Get in Touch</h2>
-    <p>Interested in collaborating or just want to say hi? Connect with me on LinkedIn or send me an email.</p>
-    <div class="contact-links">
-      <a href="https://linkedin.com/in/justisdibattista" target="_blank">LinkedIn</a>
-      <a href="mailto:justisdibattista@example.com">Email</a>
+    <h2 class="reveal">Get in Touch</h2>
+    <p class="reveal">Interested in collaborating or just want to say hi? Reach out through any of these.</p>
+    <div class="contact-links reveal">
+      <a href="https://linkedin.com/in/justisdibattista" target="_blank">
+        <span class="link-icon">&#128101;</span> LinkedIn
+      </a>
+      <a href="mailto:justisdibattista@example.com">
+        <span class="link-icon">&#9993;&#65039;</span> Email
+      </a>
+      <a href="https://github.com/bustisimo" target="_blank">
+        <span class="link-icon">&#128187;</span> GitHub
+      </a>
     </div>
   </section>
 
-  <!-- Game overlay and canvas remains hidden until triggered -->
-  <div id="gameOverlay" style="display: none;">
-    <canvas id="snakeGame"></canvas>
-    <div id="scoreDisplay">Score: 0</div>
-    <div id="highScoreDisplay">High Score: 0</div>
-    <div id="buttonContainer">
-      <button id="playAgainButton" style="display: none" onclick="startGame()">Play Again</button>
-      <button id="closeGameButton" onclick="closeGame()">Close Game</button>
+  <footer>
+    <div class="footer-links">
+      <a href="https://github.com/bustisimo" target="_blank">GitHub</a>
+      <a href="https://linkedin.com/in/justisdibattista" target="_blank">LinkedIn</a>
     </div>
-  </div>
+    <p>&copy; 2026 Justis DiBattista</p>
+  </footer>
 
   <script src="script.js"></script>
 </body>

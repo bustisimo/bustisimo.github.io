@@ -5,50 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Justis DiBattista</title>
   <link rel="stylesheet" href="styles.css" />
-  <style>
-    html { scroll-behavior: smooth; }
-  </style>
 </head>
 <body>
-  <!-- Navigation bar -->
   <nav>
-    <button id="menu-toggle" aria-label="Toggle navigation">&#9776;</button>
+    <a href="index.html" class="nav-logo">JD</a>
     <ul id="nav-links">
       <li><a href="index.html">Home</a></li>
       <li><a href="about.html">About</a></li>
       <li><a href="projects.html">Projects</a></li>
       <li><a href="contact.html">Contact</a></li>
     </ul>
+    <div class="nav-right">
+      <button id="theme-toggle" aria-label="Toggle dark mode"></button>
+      <button id="menu-toggle" aria-label="Toggle navigation">&#9776;</button>
+    </div>
   </nav>
 
-  <!-- Hero Section -->
   <section id="home" class="hero">
     <div class="container">
       <h1 class="fade-item delay-0">Justis DiBattista</h1>
-      <p class="fade-item delay-1">Triage Operations & Computer Engineer</p>
+      <p class="subtitle fade-item delay-1">Triage Operations &amp; Computer Engineer</p>
       <div id="click-counter" class="fade-item delay-2">
         <button id="click-btn">Click Me!</button>
         <p>Total Clicks: <span id="click-count">Loading...</span></p>
-        <script>
-          const counterUrl = 'https://api.counterapi.dev/api/v1/counter/justisdibattista/clicks';
-
-          async function updateCount() {
-            const res = await fetch('${counterUrl}/get');
-            const data = await res.json();
-            document.getElementById('click-count').innerText = data.count;
-          }
-
-          async function incrementCount() {
-            const res = await fetch '${counterUrl}/hit');
-            const data = await res.json();
-            document.getElementById('click-count').innerText = data.count;
-          }
-
-          document.getElementById('click-btn').addEventListener('click', incrementCount);
-
-          // Load the count on page load
-          updateCount();
-        </script>
       </div>
     </div>
   </section>
@@ -66,6 +45,41 @@
 
   <button id="snakeButton" onclick="startGame()">Play Snake</button>
 
+  <footer>
+    <div class="footer-links">
+      <a href="https://github.com/bustisimo" target="_blank">GitHub</a>
+      <a href="https://linkedin.com/in/justisdibattista" target="_blank">LinkedIn</a>
+    </div>
+    <p>&copy; 2026 Justis DiBattista</p>
+  </footer>
+
+  <script>
+    const counterUrl = 'https://api.counterapi.dev/api/v1/counter/justisdibattista/clicks';
+
+    async function updateCount() {
+      try {
+        const res = await fetch(`${counterUrl}/get`);
+        const data = await res.json();
+        document.getElementById('click-count').innerText = data.count;
+      } catch (e) {
+        document.getElementById('click-count').innerText = '---';
+      }
+    }
+
+    async function incrementCount() {
+      if (typeof haptic === 'function') haptic('light');
+      try {
+        const res = await fetch(`${counterUrl}/hit`);
+        const data = await res.json();
+        document.getElementById('click-count').innerText = data.count;
+      } catch (e) {
+        document.getElementById('click-count').innerText = '---';
+      }
+    }
+
+    document.getElementById('click-btn').addEventListener('click', incrementCount);
+    updateCount();
+  </script>
   <script src="script.js"></script>
 </body>
 </html>

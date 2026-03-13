@@ -1,38 +1,251 @@
-// ===== Haptic Feedback =====
-// Uses Vibration API on Android, hidden-checkbox trick on iOS Safari
-var _hapticLabel = null;
-var _hapticInput = null;
-var _isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+// ===== Haptic Feedback (Web-Haptics Style) =====
+// PWM-modulated clicks for intensity simulation on iOS Safari
 
-function _setupIOSHaptic() {
-  if (_hapticLabel) return;
-  _hapticInput = document.createElement('input');
-  _hapticInput.type = 'checkbox';
-  _hapticInput.id = '__haptic';
-  _hapticInput.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;pointer-events:none;width:0;height:0;';
-  _hapticLabel = document.createElement('label');
-  _hapticLabel.setAttribute('for', '__haptic');
-  _hapticLabel.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;pointer-events:none;width:0;height:0;';
-  document.body.appendChild(_hapticInput);
-  document.body.appendChild(_hapticLabel);
-}
+var TOGGLE_MIN = 16; // ms at intensity 1
+var TOGGLE_MAX = 184; // range above min
+var PWM_CYCLE = 20; // ms per modulation cycle
+
+var HapticController = (function () {
+  var hapticLabel = null;
+  var hapticCheckbox = null;
+  var rafId = null;
+
+  function ensureDOM() {
+    if (hapticLabel) return;
+
+    var id = '__haptic-' + Math.random().toString(36).slice(2);
+
+    hapticCheckbox = document.createElement('input');
+    hapticCheckbox.type = 'checkbox';
+    hapticCheckbox.id = id;
+    hapticCheckbox.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;pointer-events:none;width:0;height:0;';
+
+    hapticLabel = document.createElement('label');
+    hapticLabel.setAttribute('for', id);
+    hapticLabel.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;pointer-events:none;width:0;height:0;';
+
+    document.body.appendChild(hapticCheckbox);
+    document.body.appendChild(hapticLabel);
+  }
+
+  function modulateVibration(duration, intensity) {
+    if (intensity >= 1) return [duration];
+    if (intensity <= 0) return [];
+
+    var onTime = Math.max(1, Math.round(PWM_CYCLE * intensity));
+    var offTime = PWM_CYCLE - onTime;
+    var result = [];
+    var remaining = duration;
+
+    while (remaining >= PWM_CYCLE) {
+      result.push(onTime);
+      result.push(offTime);
+      remaining -= PWM_CYCLE;
+    }
+    if (remaining > 0) {
+      var remOn = Math.max(1, Math.round(remaining * intensity));
+      result.push(remOn);
+      var remOff = remaining - remOn;
+      if (remOff > 0) result.push(remOff);
+    }
+
+    return result;
+  }
+
+  function toVibratePattern(vibrations, defaultIntensity) {
+    var result = [];
+
+    for (var i = 0; i < vibrations.length; i++) {
+      var vib = vibrations[i];
+      var intensity = Math.max(0, Math.min(1, vib.intensity !== undefined ? vib.intensity : defaultIntensity));
+      var delay = vib.delay || 0;
+
+      if (delay > 0) {
+        if (result.length > 0 && result.length % 2 === 0) {
+          result[result.length - 1] += delay;
+        } else {
+          if (result.length === 0) result.push(0);
+          result.push(delay);
+        }
+      }
+
+      var modulated = modulateVibration(vib.duration, intensity);
+
+      if (modulated.length === 0) {
+        if (result.length > 0 && result.length % 2 === 0) {
+          result[result.length - 1] += vib.duration;
+        } else if (vib.duration > 0) {
+          result.push(0);
+          result.push(vib.duration);
+        }
+        continue;
+      }
+
+      for (var j = 0; j < modulated.length; j++) {
+        result.push(modulated[j]);
+      }
+    }
+
+    return result;
+  }
+
+  function runPattern(vibrations, defaultIntensity) {
+    return new Promise(function (resolve) {
+      ensureDOM();
+      if (!hapticLabel) {
+        resolve();
+        return;
+      }
+
+      // Build phases
+      var phases = [];
+      var cumulative = 0;
+      for (var i = 0; i < vibrations.length; i++) {
+        var vib = vibrations[i];
+        var intensity = Math.max(0, Math.min(1, vib.intensity !== undefined ? vib.intensity : defaultIntensity));
+        var delay = vib.delay || 0;
+        if (delay > 0) {
+          cumulative += delay;
+          phases.push({ end: cumulative, isOn: false, intensity: 0 });
+        }
+        cumulative += vib.duration;
+        phases.push({ end: cumulative, isOn: true, intensity: intensity });
+      }
+      var totalDuration = cumulative;
+
+      var startTime = 0;
+      var lastToggleTime = -1;
+      var firstClickFired = false;
+
+      function loop(time) {
+        if (startTime === 0) startTime = time;
+        var elapsed = time - startTime;
+
+        if (elapsed >= totalDuration) {
+          rafId = null;
+          resolve();
+          return;
+        }
+
+        // Find current phase
+        var phase = phases[0];
+        for (var i = 0; i < phases.length; i++) {
+          if (elapsed < phases[i].end) {
+            phase = phases[i];
+            break;
+          }
+        }
+
+        if (phase.isOn) {
+          var toggleInterval = TOGGLE_MIN + (1 - phase.intensity) * TOGGLE_MAX;
+
+          if (lastToggleTime === -1) {
+            lastToggleTime = time;
+            if (!firstClickFired) {
+              hapticLabel.click();
+              firstClickFired = true;
+            }
+          } else if (time - lastToggleTime >= toggleInterval) {
+            hapticLabel.click();
+            lastToggleTime = time;
+          }
+        } else {
+          lastToggleTime = -1;
+        }
+
+        rafId = requestAnimationFrame(loop);
+      }
+
+      rafId = requestAnimationFrame(loop);
+    });
+  }
+
+  return {
+    trigger: function (input, options) {
+      if (navigator.vibrate) {
+        var defaultIntensity = options && options.intensity ? options.intensity : 0.5;
+        var vibrations = [];
+
+        if (typeof input === 'number') {
+          vibrations = [{ duration: input, intensity: defaultIntensity }];
+        } else if (Array.isArray(input)) {
+          if (typeof input[0] === 'number') {
+            // [on, off, on, off, ...] shorthand
+            for (var i = 0; i < input.length; i += 2) {
+              vibrations.push({
+                duration: input[i],
+                delay: i > 0 ? input[i - 1] : 0
+              });
+            }
+          } else {
+            vibrations = input;
+          }
+        } else if (input && typeof input === 'object' && input.pattern) {
+          vibrations = input.pattern;
+        }
+
+        navigator.vibrate(toVibratePattern(vibrations, defaultIntensity));
+      }
+
+      // iOS Safari fallback: PWM clicks via RAF
+      var vibrations = [];
+      if (typeof input === 'number') {
+        vibrations = [{ duration: input }];
+      } else if (Array.isArray(input)) {
+        if (typeof input[0] === 'number') {
+          for (var i = 0; i < input.length; i += 2) {
+            vibrations.push({ duration: input[i], delay: i > 0 ? input[i - 1] : 0 });
+          }
+        } else {
+          vibrations = input;
+        }
+      } else if (input && typeof input === 'object' && input.pattern) {
+        vibrations = input.pattern;
+      }
+
+      var defaultIntensity = options && options.intensity ? options.intensity : 0.5;
+      return runPattern(vibrations, defaultIntensity);
+    },
+
+    cancel: function () {
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+      if (navigator.vibrate) navigator.vibrate(0);
+    }
+  };
+})();
 
 function haptic(type) {
-  // Android / Chrome — Vibration API
-  if (navigator.vibrate) {
-    switch (type) {
-      case 'light':   navigator.vibrate(8);  break;
-      case 'medium':  navigator.vibrate(20); break;
-      case 'heavy':   navigator.vibrate(35); break;
-      case 'success': navigator.vibrate([8, 50, 8]); break;
-      case 'error':   navigator.vibrate([40, 30, 40, 30, 40]); break;
-      default:        navigator.vibrate(8);  break;
-    }
-    return;
-  }
-  // iOS Safari — hidden checkbox click triggers native haptic tick
-  if (_isIOS && _hapticLabel) {
-    _hapticLabel.click();
+  switch (type) {
+    case 'light':
+      HapticController.trigger([{ duration: 20, intensity: 0.4 }]);
+      break;
+    case 'medium':
+      HapticController.trigger([{ duration: 30, intensity: 0.7 }]);
+      break;
+    case 'heavy':
+      HapticController.trigger([{ duration: 40, intensity: 0.9 }]);
+      break;
+    case 'success':
+      HapticController.trigger([
+        { duration: 20, intensity: 0.6 },
+        { duration: 50, intensity: 0 },
+        { duration: 20, intensity: 0.6 }
+      ]);
+      break;
+    case 'error':
+      HapticController.trigger([
+        { duration: 40, intensity: 0.8 },
+        { duration: 30, intensity: 0 },
+        { duration: 40, intensity: 0.8 },
+        { duration: 30, intensity: 0 },
+        { duration: 40, intensity: 0.8 }
+      ]);
+      break;
+    default:
+      HapticController.trigger([{ duration: 20, intensity: 0.4 }]);
   }
 }
 
@@ -76,9 +289,6 @@ function toggleTheme() {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-  // Set up iOS haptic elements now that body exists
-  if (_isIOS) _setupIOSHaptic();
-
   updateThemeIcon();
   updateThemeColor();
 
@@ -99,7 +309,6 @@ if (menuToggle && navLinks) {
     haptic('light');
   });
 
-  // Auto-close nav when a link is tapped
   var navLinkItems = navLinks.querySelectorAll('a');
   for (var i = 0; i < navLinkItems.length; i++) {
     navLinkItems[i].addEventListener('click', function () {
@@ -150,7 +359,6 @@ var nav = document.querySelector('nav');
 var dpad = document.getElementById('dpad');
 var isTouchDevice = 'ontouchstart' in window;
 
-// Only initialize game variables if the canvas exists on this page
 if (canvas) {
   var context = canvas.getContext('2d');
   var scoreDisplay = document.getElementById('scoreDisplay');
@@ -159,7 +367,6 @@ if (canvas) {
   var closeGameButton = document.getElementById('closeGameButton');
 }
 
-// Game state variables
 var score = 0;
 var highScore = localStorage.getItem('snakeHighScore')
   ? parseInt(localStorage.getItem('snakeHighScore'), 10)
@@ -170,66 +377,51 @@ var food = {};
 var gameInterval;
 var cellSize = 20;
 
-// Start or restart the Snake game
 function startGame() {
   if (!canvas) return;
 
-  // Lock body scroll
   document.body.style.overflow = 'hidden';
-
-  // Hide navigation so game takes full screen
   if (nav) nav.style.display = 'none';
 
-  // Reset score and direction
   score = 0;
   direction = { x: 1, y: 0 };
 
-  // Resize canvas to fill viewport
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
-  // Determine grid dimensions based on cell size
   var gridWidth = Math.floor(canvas.width / cellSize);
   var gridHeight = Math.floor(canvas.height / cellSize);
 
-  // Initialize snake in the center of the grid
   var startX = Math.floor(gridWidth / 2);
   var startY = Math.floor(gridHeight / 2);
   snake = [{ x: startX, y: startY }];
 
-  // Place initial food at a random position
   food = {
     x: Math.floor(Math.random() * gridWidth),
     y: Math.floor(Math.random() * gridHeight),
   };
 
-  // Update on-screen scores
   scoreDisplay.textContent = 'Score: ' + score;
   highScoreDisplay.textContent = 'High Score: ' + highScore;
   highScoreDisplay.style.display = 'block';
 
-  // Show game overlay and canvas
   document.getElementById('gameOverlay').style.display = 'block';
   canvas.style.display = 'block';
   scoreDisplay.style.display = 'block';
 
-  // Hide control buttons until game ends
   playAgainButton.style.display = 'none';
   closeGameButton.style.display = 'none';
 
-  // Show D-pad on touch devices
   if (dpad && isTouchDevice) {
     dpad.style.display = 'grid';
   }
 
-  // Start the game loop
   clearInterval(gameInterval);
   gameInterval = setInterval(function () { updateGame(gridWidth, gridHeight); }, 100);
 
   haptic('medium');
 }
 
-// Game update loop
 function updateGame(gridWidth, gridHeight) {
   var head = {
     x: snake[0].x + direction.x,
@@ -258,7 +450,6 @@ function updateGame(gridWidth, gridHeight) {
   drawGame(gridWidth, gridHeight);
 }
 
-// Draw snake, food and background
 function drawGame(gridWidth, gridHeight) {
   context.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -271,7 +462,6 @@ function drawGame(gridWidth, gridHeight) {
   context.fillRect(food.x * cellSize, food.y * cellSize, cellSize, cellSize);
 }
 
-// Handle game over logic
 function endGame() {
   clearInterval(gameInterval);
 
@@ -286,13 +476,11 @@ function endGame() {
   playAgainButton.style.display = 'block';
   closeGameButton.style.display = 'block';
 
-  // Hide D-pad when game ends
   if (dpad) dpad.style.display = 'none';
 
   document.getElementById('gameOverlay').style.display = 'flex';
 }
 
-// Arrow key control handling
 window.addEventListener('keydown', function (e) {
   switch (e.key) {
     case 'ArrowUp':
@@ -311,7 +499,6 @@ window.addEventListener('keydown', function (e) {
 });
 
 // ===== Snake Touch / Swipe Controls =====
-// Processes direction on touchmove (not touchend) for instant response
 if (canvas) {
   var touchStartX = 0;
   var touchStartY = 0;
@@ -338,7 +525,6 @@ if (canvas) {
       else if (dy < 0 && direction.y === 0) direction = { x: 0, y: -1 };
     }
 
-    // Reset origin so user can chain swipes without lifting finger
     touchStartX = e.touches[0].clientX;
     touchStartY = e.touches[0].clientY;
 
@@ -346,7 +532,7 @@ if (canvas) {
   }, { passive: false });
 }
 
-// ===== D-Pad Controls (instant tap, no swipe delay) =====
+// ===== D-Pad Controls =====
 if (dpad) {
   var dpadBtns = dpad.querySelectorAll('.dpad-btn');
   for (var i = 0; i < dpadBtns.length; i++) {
@@ -364,7 +550,6 @@ if (dpad) {
   }
 }
 
-// Close the game overlay and show navigation again
 function closeGame() {
   document.getElementById('gameOverlay').style.display = 'none';
   document.body.style.overflow = '';

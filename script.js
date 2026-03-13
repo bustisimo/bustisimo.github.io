@@ -1,13 +1,38 @@
 // ===== Haptic Feedback =====
+// Uses Vibration API on Android, hidden-checkbox trick on iOS Safari
+var _hapticLabel = null;
+var _hapticInput = null;
+var _isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+
+function _setupIOSHaptic() {
+  if (_hapticLabel) return;
+  _hapticInput = document.createElement('input');
+  _hapticInput.type = 'checkbox';
+  _hapticInput.id = '__haptic';
+  _hapticInput.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;pointer-events:none;width:0;height:0;';
+  _hapticLabel = document.createElement('label');
+  _hapticLabel.setAttribute('for', '__haptic');
+  _hapticLabel.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;pointer-events:none;width:0;height:0;';
+  document.body.appendChild(_hapticInput);
+  document.body.appendChild(_hapticLabel);
+}
+
 function haptic(type) {
-  if (!navigator.vibrate) return;
-  switch (type) {
-    case 'light':   navigator.vibrate(8);  break;
-    case 'medium':  navigator.vibrate(20); break;
-    case 'heavy':   navigator.vibrate(35); break;
-    case 'success': navigator.vibrate([8, 50, 8]); break;
-    case 'error':   navigator.vibrate([40, 30, 40, 30, 40]); break;
-    default:        navigator.vibrate(8);  break;
+  // Android / Chrome — Vibration API
+  if (navigator.vibrate) {
+    switch (type) {
+      case 'light':   navigator.vibrate(8);  break;
+      case 'medium':  navigator.vibrate(20); break;
+      case 'heavy':   navigator.vibrate(35); break;
+      case 'success': navigator.vibrate([8, 50, 8]); break;
+      case 'error':   navigator.vibrate([40, 30, 40, 30, 40]); break;
+      default:        navigator.vibrate(8);  break;
+    }
+    return;
+  }
+  // iOS Safari — hidden checkbox click triggers native haptic tick
+  if (_isIOS && _hapticLabel) {
+    _hapticLabel.click();
   }
 }
 
@@ -29,7 +54,7 @@ function updateThemeColor() {
     document.head.appendChild(meta);
   }
   var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  meta.content = isDark ? '#1a1a2e' : '#f5f5f7';
+  meta.content = isDark ? '#000000' : '#f5f5f7';
 }
 
 function updateThemeIcon() {
@@ -51,6 +76,9 @@ function toggleTheme() {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+  // Set up iOS haptic elements now that body exists
+  if (_isIOS) _setupIOSHaptic();
+
   updateThemeIcon();
   updateThemeColor();
 
@@ -119,6 +147,8 @@ document.addEventListener('DOMContentLoaded', function () {
 // ===== Snake Game =====
 var canvas = document.getElementById('snakeGame');
 var nav = document.querySelector('nav');
+var dpad = document.getElementById('dpad');
+var isTouchDevice = 'ontouchstart' in window;
 
 // Only initialize game variables if the canvas exists on this page
 if (canvas) {
@@ -144,7 +174,7 @@ var cellSize = 20;
 function startGame() {
   if (!canvas) return;
 
-  // Lock body scroll so page doesn't move behind overlay
+  // Lock body scroll
   document.body.style.overflow = 'hidden';
 
   // Hide navigation so game takes full screen
@@ -187,6 +217,11 @@ function startGame() {
   playAgainButton.style.display = 'none';
   closeGameButton.style.display = 'none';
 
+  // Show D-pad on touch devices
+  if (dpad && isTouchDevice) {
+    dpad.style.display = 'grid';
+  }
+
   // Start the game loop
   clearInterval(gameInterval);
   gameInterval = setInterval(function () { updateGame(gridWidth, gridHeight); }, 100);
@@ -196,14 +231,12 @@ function startGame() {
 
 // Game update loop
 function updateGame(gridWidth, gridHeight) {
-  // Move the snake by adding a new head
   var head = {
     x: snake[0].x + direction.x,
     y: snake[0].y + direction.y,
   };
   snake.unshift(head);
 
-  // Check if food is consumed
   if (head.x === food.x && head.y === food.y) {
     score += 10;
     scoreDisplay.textContent = 'Score: ' + score;
@@ -213,33 +246,27 @@ function updateGame(gridWidth, gridHeight) {
     };
     haptic('light');
   } else {
-    // Remove tail if no food eaten
     snake.pop();
   }
 
-  // Detect collisions with walls or self
   var hitWall = head.x < 0 || head.x >= gridWidth || head.y < 0 || head.y >= gridHeight;
   var hitSelf = snake.slice(1).some(function (part) { return part.x === head.x && part.y === head.y; });
   if (hitWall || hitSelf) {
     endGame();
   }
 
-  // Render the current frame
   drawGame(gridWidth, gridHeight);
 }
 
 // Draw snake, food and background
 function drawGame(gridWidth, gridHeight) {
-  // Clear the canvas
   context.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Draw snake segments
   context.fillStyle = '#4CAF50';
   snake.forEach(function (part) {
     context.fillRect(part.x * cellSize, part.y * cellSize, cellSize, cellSize);
   });
 
-  // Draw the food
   context.fillStyle = '#FF5733';
   context.fillRect(food.x * cellSize, food.y * cellSize, cellSize, cellSize);
 }
@@ -250,18 +277,18 @@ function endGame() {
 
   haptic('error');
 
-  // Update high score if necessary and persist it
   if (score > highScore) {
     highScore = score;
     localStorage.setItem('snakeHighScore', highScore);
   }
   highScoreDisplay.textContent = 'High Score: ' + highScore;
 
-  // Show control buttons
   playAgainButton.style.display = 'block';
   closeGameButton.style.display = 'block';
 
-  // Reveal the overlay (ensures z-index layering)
+  // Hide D-pad when game ends
+  if (dpad) dpad.style.display = 'none';
+
   document.getElementById('gameOverlay').style.display = 'flex';
 }
 
@@ -284,6 +311,7 @@ window.addEventListener('keydown', function (e) {
 });
 
 // ===== Snake Touch / Swipe Controls =====
+// Processes direction on touchmove (not touchend) for instant response
 if (canvas) {
   var touchStartX = 0;
   var touchStartY = 0;
@@ -296,26 +324,44 @@ if (canvas) {
 
   canvas.addEventListener('touchmove', function (e) {
     e.preventDefault();
-  }, { passive: false });
-
-  canvas.addEventListener('touchend', function (e) {
-    var dx = e.changedTouches[0].clientX - touchStartX;
-    var dy = e.changedTouches[0].clientY - touchStartY;
-    var minSwipe = 30;
+    var dx = e.touches[0].clientX - touchStartX;
+    var dy = e.touches[0].clientY - touchStartY;
+    var minSwipe = 20;
 
     if (Math.abs(dx) < minSwipe && Math.abs(dy) < minSwipe) return;
 
     if (Math.abs(dx) > Math.abs(dy)) {
-      // Horizontal swipe
       if (dx > 0 && direction.x === 0) direction = { x: 1, y: 0 };
       else if (dx < 0 && direction.x === 0) direction = { x: -1, y: 0 };
     } else {
-      // Vertical swipe
       if (dy > 0 && direction.y === 0) direction = { x: 0, y: 1 };
       else if (dy < 0 && direction.y === 0) direction = { x: 0, y: -1 };
     }
+
+    // Reset origin so user can chain swipes without lifting finger
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+
     haptic('light');
-  });
+  }, { passive: false });
+}
+
+// ===== D-Pad Controls (instant tap, no swipe delay) =====
+if (dpad) {
+  var dpadBtns = dpad.querySelectorAll('.dpad-btn');
+  for (var i = 0; i < dpadBtns.length; i++) {
+    (function (btn) {
+      btn.addEventListener('touchstart', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (btn.classList.contains('dpad-up') && direction.y === 0)    direction = { x: 0, y: -1 };
+        if (btn.classList.contains('dpad-down') && direction.y === 0)  direction = { x: 0, y: 1 };
+        if (btn.classList.contains('dpad-left') && direction.x === 0)  direction = { x: -1, y: 0 };
+        if (btn.classList.contains('dpad-right') && direction.x === 0) direction = { x: 1, y: 0 };
+        haptic('light');
+      }, { passive: false });
+    })(dpadBtns[i]);
+  }
 }
 
 // Close the game overlay and show navigation again
@@ -323,5 +369,6 @@ function closeGame() {
   document.getElementById('gameOverlay').style.display = 'none';
   document.body.style.overflow = '';
   if (nav) nav.style.display = '';
+  if (dpad) dpad.style.display = 'none';
   haptic('light');
 }

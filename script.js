@@ -1,270 +1,63 @@
-// ===== Haptic Feedback (Web-Haptics Style) =====
-// PWM-modulated clicks for intensity simulation on iOS Safari
+// ===== Haptic Feedback =====
+// iOS: toggle a native <input type="checkbox" switch> to trigger Taptic Engine
+// Android: navigator.vibrate()
 
-var TOGGLE_MIN = 16; // ms at intensity 1
-var TOGGLE_MAX = 184; // range above min
-var PWM_CYCLE = 20; // ms per modulation cycle
+var hapticLabel = null;
 
-var HapticController = (function () {
-  var hapticLabel = null;
-  var hapticCheckbox = null;
-  var rafId = null;
+(function initHaptic() {
+  if (typeof document === 'undefined') return;
+  var id = '_haptic';
+  var cb = document.createElement('input');
+  cb.type = 'checkbox';
+  cb.setAttribute('switch', '');
+  cb.id = id;
+  // Position off-screen but fully rendered (no display:none, no opacity:0)
+  cb.style.cssText = 'position:fixed;top:-200px;left:-200px;';
 
-  function ensureDOM() {
-    if (hapticLabel) return;
+  var lbl = document.createElement('label');
+  lbl.setAttribute('for', id);
+  lbl.style.cssText = 'position:fixed;top:-200px;left:-200px;';
 
-    var id = '__haptic-' + Math.random().toString(36).slice(2);
-
-    hapticCheckbox = document.createElement('input');
-    hapticCheckbox.type = 'checkbox';
-    hapticCheckbox.setAttribute('switch', '');
-    hapticCheckbox.id = id;
-    hapticCheckbox.style.all = 'initial';
-    hapticCheckbox.style.appearance = 'auto';
-    // Keep in render tree (not display:none) so iOS toggle animation fires Taptic Engine
-    hapticCheckbox.style.position = 'fixed';
-    hapticCheckbox.style.bottom = '0';
-    hapticCheckbox.style.left = '0';
-    hapticCheckbox.style.opacity = '0';
-    hapticCheckbox.style.pointerEvents = 'none';
-    hapticCheckbox.style.zIndex = '-1';
-
-    hapticLabel = document.createElement('label');
-    hapticLabel.setAttribute('for', id);
-    hapticLabel.style.position = 'fixed';
-    hapticLabel.style.bottom = '0';
-    hapticLabel.style.left = '0';
-    hapticLabel.style.opacity = '0';
-    hapticLabel.style.pointerEvents = 'none';
-    hapticLabel.style.zIndex = '-1';
-
-    hapticLabel.appendChild(hapticCheckbox);
-    document.body.appendChild(hapticLabel);
-  }
-
-  function modulateVibration(duration, intensity) {
-    if (intensity >= 1) return [duration];
-    if (intensity <= 0) return [];
-
-    var onTime = Math.max(1, Math.round(PWM_CYCLE * intensity));
-    var offTime = PWM_CYCLE - onTime;
-    var result = [];
-    var remaining = duration;
-
-    while (remaining >= PWM_CYCLE) {
-      result.push(onTime);
-      result.push(offTime);
-      remaining -= PWM_CYCLE;
-    }
-    if (remaining > 0) {
-      var remOn = Math.max(1, Math.round(remaining * intensity));
-      result.push(remOn);
-      var remOff = remaining - remOn;
-      if (remOff > 0) result.push(remOff);
-    }
-
-    return result;
-  }
-
-  function toVibratePattern(vibrations, defaultIntensity) {
-    var result = [];
-
-    for (var i = 0; i < vibrations.length; i++) {
-      var vib = vibrations[i];
-      var intensity = Math.max(0, Math.min(1, vib.intensity !== undefined ? vib.intensity : defaultIntensity));
-      var delay = vib.delay || 0;
-
-      if (delay > 0) {
-        if (result.length > 0 && result.length % 2 === 0) {
-          result[result.length - 1] += delay;
-        } else {
-          if (result.length === 0) result.push(0);
-          result.push(delay);
-        }
-      }
-
-      var modulated = modulateVibration(vib.duration, intensity);
-
-      if (modulated.length === 0) {
-        if (result.length > 0 && result.length % 2 === 0) {
-          result[result.length - 1] += vib.duration;
-        } else if (vib.duration > 0) {
-          result.push(0);
-          result.push(vib.duration);
-        }
-        continue;
-      }
-
-      for (var j = 0; j < modulated.length; j++) {
-        result.push(modulated[j]);
-      }
-    }
-
-    return result;
-  }
-
-  function runPattern(vibrations, defaultIntensity, firstClickFired) {
-    return new Promise(function (resolve) {
-      ensureDOM();
-      if (!hapticLabel) {
-        resolve();
-        return;
-      }
-
-      // Build phases
-      var phases = [];
-      var cumulative = 0;
-      for (var i = 0; i < vibrations.length; i++) {
-        var vib = vibrations[i];
-        var intensity = Math.max(0, Math.min(1, vib.intensity !== undefined ? vib.intensity : defaultIntensity));
-        var delay = vib.delay || 0;
-        if (delay > 0) {
-          cumulative += delay;
-          phases.push({ end: cumulative, isOn: false, intensity: 0 });
-        }
-        cumulative += vib.duration;
-        phases.push({ end: cumulative, isOn: true, intensity: intensity });
-      }
-      var totalDuration = cumulative;
-
-      var startTime = 0;
-      var lastToggleTime = -1;
-
-      function loop(time) {
-        if (startTime === 0) startTime = time;
-        var elapsed = time - startTime;
-
-        if (elapsed >= totalDuration) {
-          rafId = null;
-          resolve();
-          return;
-        }
-
-        // Find current phase
-        var phase = phases[0];
-        for (var i = 0; i < phases.length; i++) {
-          if (elapsed < phases[i].end) {
-            phase = phases[i];
-            break;
-          }
-        }
-
-        if (phase.isOn) {
-          var toggleInterval = TOGGLE_MIN + (1 - phase.intensity) * TOGGLE_MAX;
-
-          if (lastToggleTime === -1) {
-            lastToggleTime = time;
-            if (!firstClickFired) {
-              hapticLabel.click();
-              firstClickFired = true;
-            }
-          } else if (time - lastToggleTime >= toggleInterval) {
-            hapticLabel.click();
-            lastToggleTime = time;
-          }
-        } else {
-          lastToggleTime = -1;
-        }
-
-        rafId = requestAnimationFrame(loop);
-      }
-
-      rafId = requestAnimationFrame(loop);
-    });
-  }
-
-  return {
-    trigger: function (input, options) {
-      var defaultIntensity = options && options.intensity ? options.intensity : 0.5;
-      var vibrations = [];
-
-      if (typeof input === 'number') {
-        vibrations = [{ duration: input }];
-      } else if (Array.isArray(input)) {
-        if (typeof input[0] === 'number') {
-          for (var i = 0; i < input.length; i += 2) {
-            vibrations.push({ duration: input[i], delay: i > 0 ? input[i - 1] : 0 });
-          }
-        } else {
-          vibrations = input;
-        }
-      } else if (input && typeof input === 'object' && input.pattern) {
-        vibrations = input.pattern;
-      }
-
-      if (vibrations.length === 0) return;
-
-      // Apply default intensity to vibrations
-      for (var i = 0; i < vibrations.length; i++) {
-        if (vibrations[i].intensity === undefined) {
-          vibrations[i].intensity = defaultIntensity;
-        }
-      }
-
-      // Android: navigator.vibrate
-      if (navigator.vibrate) {
-        navigator.vibrate(toVibratePattern(vibrations, defaultIntensity));
-      }
-
-      // iOS Safari: toggle hidden switch checkbox to trigger Taptic Engine
-      // Fire first click synchronously so it runs within user gesture context
-      ensureDOM();
-      if (!hapticLabel) return;
-
-      if (rafId) {
-        cancelAnimationFrame(rafId);
-        rafId = null;
-      }
-
-      var firstDelay = vibrations[0].delay || 0;
-      var firstClickFired = false;
-      if (firstDelay === 0) {
-        hapticLabel.click();
-        firstClickFired = true;
-      }
-
-      return runPattern(vibrations, defaultIntensity, firstClickFired);
-    },
-
-    cancel: function () {
-      if (rafId) {
-        cancelAnimationFrame(rafId);
-        rafId = null;
-      }
-      if (navigator.vibrate) navigator.vibrate(0);
-    }
-  };
+  lbl.appendChild(cb);
+  document.body.appendChild(lbl);
+  hapticLabel = lbl;
 })();
 
+function hapticTap() {
+  if (hapticLabel) hapticLabel.click();
+}
+
 function haptic(type) {
+  // Android vibrate
+  if (navigator.vibrate) {
+    switch (type) {
+      case 'light':   navigator.vibrate(15); break;
+      case 'medium':  navigator.vibrate(25); break;
+      case 'heavy':   navigator.vibrate(35); break;
+      case 'success': navigator.vibrate([20, 60, 30]); break;
+      case 'error':   navigator.vibrate([30, 40, 30, 40, 30]); break;
+      default:        navigator.vibrate(15);
+    }
+  }
+
+  // iOS: single tap for light/medium/heavy, multi-tap for patterns
   switch (type) {
     case 'light':
-      HapticController.trigger([{ duration: 20, intensity: 0.4 }]);
-      break;
     case 'medium':
-      HapticController.trigger([{ duration: 30, intensity: 0.7 }]);
-      break;
     case 'heavy':
-      HapticController.trigger([{ duration: 40, intensity: 0.9 }]);
+      hapticTap();
       break;
     case 'success':
-      HapticController.trigger([
-        { duration: 20, intensity: 0.6 },
-        { duration: 50, intensity: 0 },
-        { duration: 20, intensity: 0.6 }
-      ]);
+      hapticTap();
+      setTimeout(hapticTap, 80);
       break;
     case 'error':
-      HapticController.trigger([
-        { duration: 40, intensity: 0.8 },
-        { duration: 30, intensity: 0 },
-        { duration: 40, intensity: 0.8 },
-        { duration: 30, intensity: 0 },
-        { duration: 40, intensity: 0.8 }
-      ]);
+      hapticTap();
+      setTimeout(hapticTap, 80);
+      setTimeout(hapticTap, 160);
       break;
     default:
-      HapticController.trigger([{ duration: 20, intensity: 0.4 }]);
+      hapticTap();
   }
 }
 

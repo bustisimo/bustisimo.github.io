@@ -21,11 +21,22 @@ var HapticController = (function () {
     hapticCheckbox.id = id;
     hapticCheckbox.style.all = 'initial';
     hapticCheckbox.style.appearance = 'auto';
-    hapticCheckbox.style.display = 'none';
+    // Keep in render tree (not display:none) so iOS toggle animation fires Taptic Engine
+    hapticCheckbox.style.position = 'fixed';
+    hapticCheckbox.style.bottom = '0';
+    hapticCheckbox.style.left = '0';
+    hapticCheckbox.style.opacity = '0';
+    hapticCheckbox.style.pointerEvents = 'none';
+    hapticCheckbox.style.zIndex = '-1';
 
     hapticLabel = document.createElement('label');
     hapticLabel.setAttribute('for', id);
-    hapticLabel.style.display = 'none';
+    hapticLabel.style.position = 'fixed';
+    hapticLabel.style.bottom = '0';
+    hapticLabel.style.left = '0';
+    hapticLabel.style.opacity = '0';
+    hapticLabel.style.pointerEvents = 'none';
+    hapticLabel.style.zIndex = '-1';
 
     hapticLabel.appendChild(hapticCheckbox);
     document.body.appendChild(hapticLabel);
@@ -195,21 +206,24 @@ var HapticController = (function () {
         navigator.vibrate(toVibratePattern(vibrations, defaultIntensity));
       }
 
-      // iOS Safari fallback: toggle checkbox for Taptic Engine
-      // CRITICAL: first click must happen synchronously within user gesture
-      if (!navigator.vibrate) {
-        ensureDOM();
-        if (!hapticLabel) return;
+      // iOS Safari: toggle hidden switch checkbox to trigger Taptic Engine
+      // Fire first click synchronously so it runs within user gesture context
+      ensureDOM();
+      if (!hapticLabel) return;
 
-        var firstDelay = vibrations[0].delay || 0;
-        var firstClickFired = false;
-        if (firstDelay === 0) {
-          hapticLabel.click();
-          firstClickFired = true;
-        }
-
-        return runPattern(vibrations, defaultIntensity, firstClickFired);
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
       }
+
+      var firstDelay = vibrations[0].delay || 0;
+      var firstClickFired = false;
+      if (firstDelay === 0) {
+        hapticLabel.click();
+        firstClickFired = true;
+      }
+
+      return runPattern(vibrations, defaultIntensity, firstClickFired);
     },
 
     cancel: function () {

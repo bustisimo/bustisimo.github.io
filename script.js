@@ -367,8 +367,6 @@ document.addEventListener('DOMContentLoaded', function () {
 // ===== Snake Game =====
 var canvas = document.getElementById('snakeGame');
 var nav = document.querySelector('nav');
-var dpad = document.getElementById('dpad');
-var isTouchDevice = 'ontouchstart' in window;
 
 if (canvas) {
   var context = canvas.getContext('2d');
@@ -423,10 +421,6 @@ function startGame() {
   playAgainButton.style.display = 'none';
   closeGameButton.style.display = 'none';
 
-  if (dpad && isTouchDevice) {
-    dpad.style.display = 'grid';
-  }
-
   clearInterval(gameInterval);
   gameInterval = setInterval(function () { updateGame(gridWidth, gridHeight); }, 100);
 
@@ -447,7 +441,7 @@ function updateGame(gridWidth, gridHeight) {
       x: Math.floor(Math.random() * gridWidth),
       y: Math.floor(Math.random() * gridHeight),
     };
-    haptic('light');
+    haptic('success');
   } else {
     snake.pop();
   }
@@ -486,8 +480,6 @@ function endGame() {
 
   playAgainButton.style.display = 'block';
   closeGameButton.style.display = 'block';
-
-  if (dpad) dpad.style.display = 'none';
 
   document.getElementById('gameOverlay').style.display = 'flex';
 }
@@ -543,28 +535,9 @@ if (canvas) {
   }, { passive: false });
 }
 
-// ===== D-Pad Controls =====
-if (dpad) {
-  var dpadBtns = dpad.querySelectorAll('.dpad-btn');
-  for (var i = 0; i < dpadBtns.length; i++) {
-    (function (btn) {
-      btn.addEventListener('touchstart', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        if (btn.classList.contains('dpad-up') && direction.y === 0)    direction = { x: 0, y: -1 };
-        if (btn.classList.contains('dpad-down') && direction.y === 0)  direction = { x: 0, y: 1 };
-        if (btn.classList.contains('dpad-left') && direction.x === 0)  direction = { x: -1, y: 0 };
-        if (btn.classList.contains('dpad-right') && direction.x === 0) direction = { x: 1, y: 0 };
-        haptic('light');
-      }, { passive: false });
-    })(dpadBtns[i]);
-  }
-}
-
 function closeGame() {
   document.getElementById('gameOverlay').style.display = 'none';
   document.body.style.overflow = '';
   if (nav) nav.style.display = '';
-  if (dpad) dpad.style.display = 'none';
   haptic('light');
 }

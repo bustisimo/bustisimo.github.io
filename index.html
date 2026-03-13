@@ -37,12 +37,6 @@
     <canvas id="snakeGame"></canvas>
     <div id="scoreDisplay">Score: 0</div>
     <div id="highScoreDisplay">High Score: 0</div>
-    <div id="dpad">
-      <button class="dpad-btn dpad-up" aria-label="Up">&#9650;</button>
-      <button class="dpad-btn dpad-left" aria-label="Left">&#9664;</button>
-      <button class="dpad-btn dpad-right" aria-label="Right">&#9654;</button>
-      <button class="dpad-btn dpad-down" aria-label="Down">&#9660;</button>
-    </div>
     <div id="buttonContainer">
       <button id="playAgainButton" style="display: none" onclick="startGame()">Play Again</button>
       <button id="closeGameButton" onclick="closeGame()">Close Game</button>
@@ -60,14 +54,24 @@
   </footer>
 
   <script>
-    var clickCount = parseInt(localStorage.getItem('clickCount') || '0', 10);
-    document.getElementById('click-count').innerText = clickCount;
+    var counterUrl = 'https://api.counterapi.dev/v1/justisdibattista-site/clicks';
 
-    document.getElementById('click-btn').addEventListener('click', function () {
-      clickCount++;
-      localStorage.setItem('clickCount', clickCount);
-      document.getElementById('click-count').innerText = clickCount;
-    });
+    function updateCount() {
+      fetch(counterUrl)
+        .then(function (res) { return res.json(); })
+        .then(function (data) { document.getElementById('click-count').innerText = data.count; })
+        .catch(function () { document.getElementById('click-count').innerText = '---'; });
+    }
+
+    function incrementCount() {
+      fetch(counterUrl + '/up')
+        .then(function (res) { return res.json(); })
+        .then(function (data) { document.getElementById('click-count').innerText = data.count; })
+        .catch(function () { document.getElementById('click-count').innerText = '---'; });
+    }
+
+    document.getElementById('click-btn').addEventListener('click', incrementCount);
+    updateCount();
   </script>
   <script src="script.js"></script>
 </body>

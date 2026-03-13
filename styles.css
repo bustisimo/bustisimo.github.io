@@ -655,48 +655,6 @@ footer .footer-links a {
   #snakeButton:hover { opacity: 1; }
 }
 
-/* ===== D-Pad (snake mobile controls) ===== */
-#dpad {
-  position: fixed;
-  bottom: 40px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 2004;
-  display: none;
-  grid-template-columns: 64px 64px 64px;
-  grid-template-rows: 64px 64px 64px;
-  gap: 6px;
-}
-
-.dpad-btn {
-  width: 64px;
-  height: 64px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 1.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: none;
-  transition: background 0.1s ease;
-  padding: 0;
-}
-
-.dpad-btn:active {
-  background: rgba(255, 255, 255, 0.25);
-  transform: scale(0.9);
-}
-
-.dpad-up    { grid-column: 2; grid-row: 1; }
-.dpad-left  { grid-column: 1; grid-row: 2; }
-.dpad-right { grid-column: 3; grid-row: 2; }
-.dpad-down  { grid-column: 2; grid-row: 3; }
-
 /* ===== Responsive: Mobile ===== */
 @media (max-width: 768px) {
   nav {
@@ -824,23 +782,10 @@ footer .footer-links a {
     padding-bottom: calc(2.5rem + env(safe-area-inset-bottom, 0px));
   }
 
-  /* Push D-pad higher on shorter screens */
-  #dpad {
-    bottom: 24px;
-  }
 }
 
 @media (max-width: 480px) {
   .interests-grid {
     grid-template-columns: 1fr;
-  }
-
-  #dpad {
-    gap: 4px;
-  }
-
-  .dpad-btn {
-    width: 56px;
-    height: 56px;
   }
 }

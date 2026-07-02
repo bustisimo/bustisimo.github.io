@@ -372,3 +372,99 @@ function closeGame() {
   if (nav) nav.style.display = '';
   haptic('light');
 }
+
+// ===== Mini Terminal =====
+(function initTerminal() {
+  var terminal = document.getElementById('mini-terminal');
+  var cmdEl = document.getElementById('term-cmd');
+  var outputEl = document.getElementById('term-output');
+  if (!terminal || !cmdEl || !outputEl) return;
+
+  var commands = [
+    { cmd: 'whoami', output: 'justis. triage ops, builder, tinkerer.' },
+    { cmd: 'uptime', output: 'been at this a while. no plans on stopping.' },
+    { cmd: 'skills', output: 'js, python, c#, infrastructure, a bit of everything.' },
+    { cmd: 'status', output: 'building things. breaking things. fixing both.' },
+    { cmd: 'projects', output: 'scruggle, compass, bookshelf. check the page.' },
+    { cmd: 'location', output: 'new jersey' },
+    { cmd: 'contact', output: 'github or linkedin - both in the footer.' },
+  ];
+
+  var index = 0;
+  var typing = false;
+  var typeTimer = null;
+
+  function typeCommand(cmd, callback) {
+    typing = true;
+    cmdEl.textContent = '';
+    var i = 0;
+    function tick() {
+      if (i < cmd.length) {
+        cmdEl.textContent += cmd[i];
+        i++;
+        typeTimer = setTimeout(tick, 40);
+      } else {
+        typing = false;
+        if (callback) setTimeout(callback, 300);
+      }
+    }
+    tick();
+  }
+
+  function showOutput(text) {
+    outputEl.textContent = text;
+  }
+
+  function nextCommand() {
+    if (typing) {
+      // Finish typing instantly on click
+      clearTimeout(typeTimer);
+      cmdEl.textContent = commands[index].cmd;
+      typing = false;
+      setTimeout(function() {
+        showOutput(commands[index].output);
+        index = (index + 1) % commands.length;
+        setTimeout(function() {
+          typeCommand(commands[index].cmd);
+        }, 600);
+      }, 200);
+      return;
+    }
+    showOutput(commands[index].output);
+    index = (index + 1) % commands.length;
+    setTimeout(function() {
+      typeCommand(commands[index].cmd);
+    }, 600);
+  }
+
+  terminal.addEventListener('click', nextCommand);
+
+  // Start with first command typed in
+  setTimeout(function() {
+    typeCommand(commands[0].cmd);
+    // Show output after a beat
+    setTimeout(function() {
+      showOutput(commands[0].output);
+      index = 1;
+      setTimeout(function() {
+        typeCommand(commands[1].cmd);
+      }, 800);
+    }, commands[0].cmd.length * 40 + 400);
+  }, 800);
+
+  // Auto-advance every 8s if idle
+  var autoTimer = setInterval(function() {
+    if (!typing) {
+      // Clear output, advance
+      outputEl.textContent = '';
+      typeCommand(commands[index].cmd);
+      setTimeout(function() {
+        showOutput(commands[index].output);
+        index = (index + 1) % commands.length;
+        setTimeout(function() {
+          typeCommand(commands[index].cmd);
+        }, 800);
+      }, commands[index].cmd.length * 40 + 400);
+    }
+  }, 8000);
+})();

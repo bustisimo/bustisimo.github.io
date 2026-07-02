@@ -25,9 +25,18 @@
     <div class="container">
       <h1 class="fade-item delay-0">Justis DiBattista</h1>
       <p class="subtitle fade-item delay-1">Triage Operations &amp; Computer Engineer</p>
-      <div id="click-counter" class="fade-item delay-2">
-        <button id="click-btn">Click Me!</button>
-        <p>Total Clicks: <span id="click-count">Loading...</span></p>
+      <div id="mini-terminal" class="fade-item delay-2">
+        <div class="term-bar">
+          <span class="term-dot term-dot-red"></span>
+          <span class="term-dot term-dot-yellow"></span>
+          <span class="term-dot term-dot-green"></span>
+          <span class="term-label">terminal</span>
+        </div>
+        <div class="term-body">
+          <div class="term-line"><span class="term-prompt">justis@site:~$</span> <span id="term-cmd"></span></div>
+          <div class="term-output" id="term-output"></div>
+          <div class="term-line"><span class="term-cursor">&#9612;</span></div>
+        </div>
       </div>
     </div>
   </section>
@@ -53,26 +62,6 @@
     <p>&copy; 2026 Justis DiBattista</p>
   </footer>
 
-  <script>
-    var counterUrl = 'https://api.counterapi.dev/v1/justisdibattista-site/clicks';
-
-    function updateCount() {
-      fetch(counterUrl)
-        .then(function (res) { return res.json(); })
-        .then(function (data) { document.getElementById('click-count').innerText = data.count; })
-        .catch(function () { document.getElementById('click-count').innerText = '---'; });
-    }
-
-    function incrementCount() {
-      fetch(counterUrl + '/up')
-        .then(function (res) { return res.json(); })
-        .then(function (data) { document.getElementById('click-count').innerText = data.count; })
-        .catch(function () { document.getElementById('click-count').innerText = '---'; });
-    }
-
-    document.getElementById('click-btn').addEventListener('click', incrementCount);
-    updateCount();
-  </script>
   <script src="script.js"></script>
 </body>
 </html>

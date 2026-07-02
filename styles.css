@@ -345,7 +345,7 @@ section h2 + p {
 .project-grid {
   display: grid;
   gap: 1.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 
 .project-card {
@@ -426,6 +426,17 @@ section h2 + p {
 .project-link:active {
   transform: scale(0.94);
   transition-duration: 0.1s;
+}
+
+.project-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-self: flex-start;
+}
+
+.project-links .project-link {
+  align-self: auto;
 }
 
 /* ===== Contact ===== */

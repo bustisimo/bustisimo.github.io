@@ -381,13 +381,13 @@ function closeGame() {
   if (!terminal || !cmdEl || !outputEl) return;
 
   var commands = [
-    { cmd: 'whoami', output: 'justis. triage ops, builder, tinkerer.' },
-    { cmd: 'uptime', output: 'been at this a while. no plans on stopping.' },
-    { cmd: 'skills', output: 'js, python, c#, infrastructure, a bit of everything.' },
-    { cmd: 'status', output: 'building things. breaking things. fixing both.' },
-    { cmd: 'projects', output: 'scruggle, compass, bookshelf. check the page.' },
+    { cmd: 'whoami', output: 'justis.' },
+    { cmd: 'uptime', output: 'since 2018' },
+    { cmd: 'skills', output: 'js, python, c#, infra' },
+    { cmd: 'status', output: 'building things' },
+    { cmd: 'projects', output: 'scruggle, compass' },
     { cmd: 'location', output: 'new jersey' },
-    { cmd: 'contact', output: 'github or linkedin - both in the footer.' },
+    { cmd: 'contact', output: 'gh / linkedin' },
   ];
 
   var index = 0;
@@ -452,7 +452,7 @@ function closeGame() {
     }, commands[0].cmd.length * 40 + 400);
   }, 800);
 
-  // Auto-advance every 8s if idle
+  // Auto-advance every 20s if idle (don't rush the user)
   var autoTimer = setInterval(function() {
     if (!typing) {
       // Clear output, advance
@@ -466,5 +466,5 @@ function closeGame() {
         }, 800);
       }, commands[index].cmd.length * 40 + 400);
     }
-  }, 8000);
+  }, 20000);
 })();

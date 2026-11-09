@@ -4,6 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Contact - Justis DiBattista</title>
+  <script>
+    // Apply saved/system theme before first paint (prevents light-mode flash)
+    (function () {
+      try {
+        var t = localStorage.getItem('theme');
+        if (!t && window.matchMedia('(prefers-color-scheme: dark)').matches) t = 'dark';
+        if (t) document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -11,7 +21,6 @@
     <a href="index.html" class="nav-logo">JD</a>
     <ul id="nav-links">
       <li><a href="index.html">Home</a></li>
-      <li><a href="about.html">About</a></li>
       <li><a href="projects.html">Projects</a></li>
       <li><a href="contact.html">Contact</a></li>
     </ul>
@@ -27,9 +36,6 @@
     <div class="contact-links reveal">
       <a href="https://linkedin.com/in/justisdibattista" target="_blank">
         <span class="link-icon">&#128101;</span> LinkedIn
-      </a>
-      <a href="mailto:justisdibattista@example.com">
-        <span class="link-icon">&#9993;&#65039;</span> Email
       </a>
       <a href="https://github.com/bustisimo" target="_blank">
         <span class="link-icon">&#128187;</span> GitHub

@@ -4,6 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Justis DiBattista</title>
+  <script>
+    // Apply saved/system theme before first paint (prevents light-mode flash)
+    (function () {
+      try {
+        var t = localStorage.getItem('theme');
+        if (!t && window.matchMedia('(prefers-color-scheme: dark)').matches) t = 'dark';
+        if (t) document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -11,7 +21,6 @@
     <a href="index.html" class="nav-logo">JD</a>
     <ul id="nav-links">
       <li><a href="index.html">Home</a></li>
-      <li><a href="about.html">About</a></li>
       <li><a href="projects.html">Projects</a></li>
       <li><a href="contact.html">Contact</a></li>
     </ul>
@@ -25,18 +34,9 @@
     <div class="container">
       <h1 class="fade-item delay-0">Justis DiBattista</h1>
       <p class="subtitle fade-item delay-1">Triage Operations &amp; Computer Engineer</p>
-      <div id="mini-terminal" class="fade-item delay-2">
-        <div class="term-bar">
-          <span class="term-dot term-dot-red"></span>
-          <span class="term-dot term-dot-yellow"></span>
-          <span class="term-dot term-dot-green"></span>
-          <span class="term-label">terminal</span>
-        </div>
-        <div class="term-body">
-          <div class="term-line"><span class="term-prompt">justis@site:~$</span> <span id="term-cmd"></span></div>
-          <div class="term-output" id="term-output"></div>
-          <div class="term-line"><span class="term-cursor">&#9612;</span></div>
-        </div>
+      <div class="hero-links fade-item delay-2">
+        <a href="projects.html" class="hero-btn hero-btn-primary">See my projects</a>
+        <a href="https://github.com/bustisimo" target="_blank" rel="noopener" class="hero-btn">GitHub</a>
       </div>
     </div>
   </section>

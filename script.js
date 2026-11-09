@@ -62,14 +62,6 @@ function haptic(type) {
 }
 
 // ===== Dark Mode Toggle =====
-(function initTheme() {
-  var saved = localStorage.getItem('theme');
-  if (saved) {
-    document.documentElement.setAttribute('data-theme', saved);
-  } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    document.documentElement.setAttribute('data-theme', 'dark');
-  }
-})();
 
 function updateThemeColor() {
   var meta = document.querySelector('meta[name="theme-color"]');
@@ -94,10 +86,9 @@ function toggleTheme() {
   var current = document.documentElement.getAttribute('data-theme');
   var next = current === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', next);
-  localStorage.setItem('theme', next);
+  try { localStorage.setItem('theme', next); } catch (e) {}
   updateThemeIcon();
   updateThemeColor();
-  haptic('medium');
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -118,7 +109,6 @@ if (menuToggle && navLinks) {
     var isOpen = navLinks.classList.contains('show');
     menuToggle.innerHTML = isOpen ? '&#10005;' : '&#9776;';
     menuToggle.setAttribute('aria-expanded', String(isOpen));
-    haptic('light');
   });
 
   var navLinkItems = navLinks.querySelectorAll('a');
@@ -128,7 +118,6 @@ if (menuToggle && navLinks) {
         navLinks.classList.remove('show');
         menuToggle.innerHTML = '&#9776;';
         menuToggle.setAttribute('aria-expanded', 'false');
-        haptic('light');
       }
     });
   }
@@ -136,7 +125,7 @@ if (menuToggle && navLinks) {
 
 // ===== Global Haptic on All Buttons & Links =====
 document.addEventListener('click', function (e) {
-  var target = e.target.closest('button, a, .project-link, .contact-links a, .interest-card');
+  var target = e.target.closest('button, a');
   if (target) haptic('light');
 }, true);
 
@@ -189,6 +178,8 @@ var highScore = localStorage.getItem('snakeHighScore')
   : 0;
 var snake = [];
 var direction = { x: 1, y: 0 };
+var directionQueue = [];   // turns waiting to be applied, one per tick
+var gameRunning = false;
 var food = {};
 var gameInterval;
 var cellSize = 20;
@@ -204,6 +195,7 @@ function startGame() {
 
   score = 0;
   direction = { x: 1, y: 0 };
+  directionQueue = [];
 
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
@@ -215,10 +207,7 @@ function startGame() {
   var startY = Math.floor(gridHeight / 2);
   snake = [{ x: startX, y: startY }];
 
-  food = {
-    x: Math.floor(Math.random() * gridWidth),
-    y: Math.floor(Math.random() * gridHeight),
-  };
+  placeFood(gridWidth, gridHeight);
 
   scoreDisplay.textContent = 'Score: ' + score;
   highScoreDisplay.textContent = 'High Score: ' + highScore;
@@ -232,12 +221,34 @@ function startGame() {
   closeGameButton.style.display = 'none';
 
   clearInterval(gameInterval);
+  gameRunning = true;
   gameInterval = setInterval(function () { updateGame(gridWidth, gridHeight); }, 100);
+}
 
-  haptic('medium');
+// Pick a random empty cell (never on the snake)
+function placeFood(gridWidth, gridHeight) {
+  var free = [];
+  for (var x = 0; x < gridWidth; x++) {
+    for (var y = 0; y < gridHeight; y++) {
+      if (!snake.some(function (p) { return p.x === x && p.y === y; })) free.push({ x: x, y: y });
+    }
+  }
+  food = free.length ? free[Math.floor(Math.random() * free.length)] : { x: -1, y: -1 };
+}
+
+// Queue a turn. Each turn is checked against the last *queued* direction,
+// so two quick key presses inside one tick can't reverse the snake into itself.
+function queueDirection(dx, dy) {
+  if (!gameRunning) return;
+  var last = directionQueue.length ? directionQueue[directionQueue.length - 1] : direction;
+  if (last.x === dx && last.y === dy) return;        // same direction
+  if (last.x === -dx && last.y === -dy) return;      // 180° reversal
+  if (directionQueue.length < 3) directionQueue.push({ x: dx, y: dy });
 }
 
 function updateGame(gridWidth, gridHeight) {
+  if (directionQueue.length) direction = directionQueue.shift();
+
   var head = {
     x: snake[0].x + direction.x,
     y: snake[0].y + direction.y,
@@ -247,10 +258,7 @@ function updateGame(gridWidth, gridHeight) {
   if (head.x === food.x && head.y === food.y) {
     score += 10;
     scoreDisplay.textContent = 'Score: ' + score;
-    food = {
-      x: Math.floor(Math.random() * gridWidth),
-      y: Math.floor(Math.random() * gridHeight),
-    };
+    placeFood(gridWidth, gridHeight);
     pendingGameHaptic = 'success';
   } else {
     snake.pop();
@@ -259,7 +267,10 @@ function updateGame(gridWidth, gridHeight) {
   var hitWall = head.x < 0 || head.x >= gridWidth || head.y < 0 || head.y >= gridHeight;
   var hitSelf = snake.slice(1).some(function (part) { return part.x === head.x && part.y === head.y; });
   if (hitWall || hitSelf) {
+    snake.shift();          // don't draw the head off-grid / inside the body
+    drawGame(gridWidth, gridHeight);
     endGame();
+    return;
   }
 
   drawGame(gridWidth, gridHeight);
@@ -279,12 +290,13 @@ function drawGame(gridWidth, gridHeight) {
 
 function endGame() {
   clearInterval(gameInterval);
+  gameRunning = false;
 
   pendingGameHaptic = 'error';
 
   if (score > highScore) {
     highScore = score;
-    localStorage.setItem('snakeHighScore', highScore);
+    try { localStorage.setItem('snakeHighScore', highScore); } catch (e) {}
   }
   highScoreDisplay.textContent = 'High Score: ' + highScore;
 
@@ -295,20 +307,18 @@ function endGame() {
 }
 
 window.addEventListener('keydown', function (e) {
-  switch (e.key) {
-    case 'ArrowUp':
-      if (direction.y === 0) direction = { x: 0, y: -1 };
-      break;
-    case 'ArrowDown':
-      if (direction.y === 0) direction = { x: 0, y: 1 };
-      break;
-    case 'ArrowLeft':
-      if (direction.x === 0) direction = { x: -1, y: 0 };
-      break;
-    case 'ArrowRight':
-      if (direction.x === 0) direction = { x: 1, y: 0 };
-      break;
+  if (!gameRunning) return;
+  var dirs = {
+    ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0],
+    w: [0, -1], s: [0, 1], a: [-1, 0], d: [1, 0],
+  };
+  var d = dirs[e.key];
+  if (!d) {
+    if (e.key === 'Escape') { endGame(); closeGame(); }
+    return;
   }
+  e.preventDefault();
+  queueDirection(d[0], d[1]);
 });
 
 // ===== Snake Touch / Swipe Controls =====
@@ -343,13 +353,8 @@ if (canvas) {
 
     if (Math.abs(dx) < minSwipe && Math.abs(dy) < minSwipe) return;
 
-    if (Math.abs(dx) > Math.abs(dy)) {
-      if (dx > 0 && direction.x === 0) direction = { x: 1, y: 0 };
-      else if (dx < 0 && direction.x === 0) direction = { x: -1, y: 0 };
-    } else {
-      if (dy > 0 && direction.y === 0) direction = { x: 0, y: 1 };
-      else if (dy < 0 && direction.y === 0) direction = { x: 0, y: -1 };
-    }
+    if (Math.abs(dx) > Math.abs(dy)) queueDirection(dx > 0 ? 1 : -1, 0);
+    else queueDirection(0, dy > 0 ? 1 : -1);
 
     touchStartX = e.touches[0].clientX;
     touchStartY = e.touches[0].clientY;
@@ -370,101 +375,4 @@ function closeGame() {
   document.getElementById('gameOverlay').style.display = 'none';
   document.body.style.overflow = '';
   if (nav) nav.style.display = '';
-  haptic('light');
 }
-
-// ===== Mini Terminal =====
-(function initTerminal() {
-  var terminal = document.getElementById('mini-terminal');
-  var cmdEl = document.getElementById('term-cmd');
-  var outputEl = document.getElementById('term-output');
-  if (!terminal || !cmdEl || !outputEl) return;
-
-  var commands = [
-    { cmd: 'whoami', output: 'justis.' },
-    { cmd: 'uptime', output: 'since 2018' },
-    { cmd: 'skills', output: 'js, python, c#, infra' },
-    { cmd: 'status', output: 'building things' },
-    { cmd: 'projects', output: 'scruggle, compass' },
-    { cmd: 'location', output: 'new jersey' },
-    { cmd: 'contact', output: 'gh / linkedin' },
-  ];
-
-  var index = 0;
-  var typing = false;
-  var typeTimer = null;
-
-  function typeCommand(cmd, callback) {
-    typing = true;
-    cmdEl.textContent = '';
-    var i = 0;
-    function tick() {
-      if (i < cmd.length) {
-        cmdEl.textContent += cmd[i];
-        i++;
-        typeTimer = setTimeout(tick, 40);
-      } else {
-        typing = false;
-        if (callback) setTimeout(callback, 300);
-      }
-    }
-    tick();
-  }
-
-  function showOutput(text) {
-    outputEl.textContent = text;
-  }
-
-  function nextCommand() {
-    if (typing) {
-      // Finish typing instantly on click
-      clearTimeout(typeTimer);
-      cmdEl.textContent = commands[index].cmd;
-      typing = false;
-      setTimeout(function() {
-        showOutput(commands[index].output);
-        index = (index + 1) % commands.length;
-        setTimeout(function() {
-          typeCommand(commands[index].cmd);
-        }, 600);
-      }, 200);
-      return;
-    }
-    showOutput(commands[index].output);
-    index = (index + 1) % commands.length;
-    setTimeout(function() {
-      typeCommand(commands[index].cmd);
-    }, 600);
-  }
-
-  terminal.addEventListener('click', nextCommand);
-
-  // Start with first command typed in
-  setTimeout(function() {
-    typeCommand(commands[0].cmd);
-    // Show output after a beat
-    setTimeout(function() {
-      showOutput(commands[0].output);
-      index = 1;
-      setTimeout(function() {
-        typeCommand(commands[1].cmd);
-      }, 800);
-    }, commands[0].cmd.length * 40 + 400);
-  }, 800);
-
-  // Auto-advance every 20s if idle (don't rush the user)
-  var autoTimer = setInterval(function() {
-    if (!typing) {
-      // Clear output, advance
-      outputEl.textContent = '';
-      typeCommand(commands[index].cmd);
-      setTimeout(function() {
-        showOutput(commands[index].output);
-        index = (index + 1) % commands.length;
-        setTimeout(function() {
-          typeCommand(commands[index].cmd);
-        }, 800);
-      }, commands[index].cmd.length * 40 + 400);
-    }
-  }, 20000);
-})();
